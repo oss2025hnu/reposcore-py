@@ -12,7 +12,7 @@ pip install -r requirements.txt
 명령줄 관련 코드가 변경되면 아래 내용도 그에 맞게 수정해야 함.
 
 ```
-usage: __main__.py [-h] --repo REPO [--output OUTPUT] [--format {table,chart,both}]
+usage: python -m reposcore.__main__ --owner <Git nickname> --repo <Repo name> --output results --format both
 
 A CLI tool to score participation in an open-source course repository
 

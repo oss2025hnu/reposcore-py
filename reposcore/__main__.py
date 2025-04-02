@@ -10,10 +10,16 @@ def parse_arguments() -> argparse.Namespace:
         description='A CLI tool to score participation in an open-source course repository'
     )
     parser.add_argument(
+        '--owner',
+        type=str,
+        required=True,
+        help='GitHub repository owner'
+    )
+    parser.add_argument(
         '--repo',
         type=str,
         required=True,
-        help='Path to the git repository'
+        help='GitHub repository name'
     )
     parser.add_argument(
         '--output',
@@ -25,7 +31,7 @@ def parse_arguments() -> argparse.Namespace:
         '--format',
         choices=['table', 'chart', 'both'],
         default='both',
-        help='Output format'
+        help='Output format (table, chart, or both)'
     )
     return parser.parse_args()
 
@@ -34,7 +40,7 @@ def main():
     args = parse_arguments()
     
     # Initialize analyzer
-    analyzer = RepoAnalyzer(args.repo)
+    analyzer = RepoAnalyzer(args.owner, args.repo)
     
     try:
         # Collect participation data
@@ -50,12 +56,12 @@ def main():
         # Generate outputs based on format
         if args.format in ['table', 'both']:
             table = analyzer.generate_table(scores)
-            table.to_csv(f"{args.output}_scores.csv")
+            table.to_csv(f"{args.output}_scores.csv", encoding="utf-8-sig")
             print("\nParticipation Scores Table:")
             print(table)
             
         if args.format in ['chart', 'both']:
-            analyzer.generate_chart(scores)
+            analyzer.generate_chart(scores, "participation_chart.png")
             print(f"Chart saved as participation_chart.png")
             
     except Exception as e:
