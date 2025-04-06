@@ -7,7 +7,7 @@ import pandas as pd
 import requests
 from prettytable import PrettyTable
 
-scores_temp = {}
+scores_temp = {} # 임시 전역변수. 추후 scores와 통합 예정.
 
 class RepoAnalyzer:
     """Class to analyze repository participation for scoring"""
