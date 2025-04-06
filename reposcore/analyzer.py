@@ -5,7 +5,9 @@ from typing import Dict
 import matplotlib.pyplot as plt
 import pandas as pd
 import requests
+from prettytable import PrettyTable
 
+scores_temp = {}
 
 class RepoAnalyzer:
     """Class to analyze repository participation for scoring"""
@@ -110,6 +112,7 @@ class RepoAnalyzer:
     def calculate_scores(self) -> Dict:
         """Calculate participation scores for each contributor"""
         scores = {}
+        global scores_temp
         for participant, activities in self.participants.items():
             p_f = activities.get('p_enhancement', 0)
             p_b = activities.get('p_bug', 0)
@@ -134,6 +137,16 @@ class RepoAnalyzer:
 
             S = 3 * p_fb_at + 2 * p_d_at + 2 * i_fb_at + 1 * i_d_at
             scores[participant] = S
+            scores_temp[participant] = {
+                "p_feat_bug": 3 * p_fb_at,
+                "p_doc": 2 * p_d_at,
+                "i_feat_bug": 2 * i_fb_at,    
+                "i_doc": 1 * i_d_at,
+                "total" : S
+            }
+
+        # 내림차순 정렬
+        scores_temp = dict(sorted(scores_temp.items(), key=lambda x: x[1]["total"], reverse=True))
 
         # participants 딕셔너리 출력
         print("\n참여자별 활동 내역 (participants 딕셔너리):")
@@ -144,8 +157,14 @@ class RepoAnalyzer:
 
     def generate_table(self, scores: Dict, save_path: str = "results") -> None:
         """Generate a table of participation scores"""
-        df = pd.DataFrame.from_dict(scores, orient='index', columns=['Score'])
-        df.to_csv(save_path)
+        table = PrettyTable()
+        table.field_names = ["name", "feat/bug PR","document PR","feat/bug issue","document issue","total"]
+        for name, score in scores_temp.items():
+            table.add_row([name, score['p_feat_bug'], score['p_doc'], score['i_feat_bug'], score['i_doc'], score['total']])
+
+        # table.txt 작성
+        with open(save_path, 'w') as txt_file:
+            txt_file.write(str(table))  
 
     def generate_chart(self, scores: Dict, save_path: str = "results") -> None:
         """Generate a visualization of participation scores"""

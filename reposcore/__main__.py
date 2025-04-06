@@ -89,9 +89,9 @@ def main():
         os.makedirs(output_dir, exist_ok=True)
         # Generate outputs based on format
         if args.format in ["table", "both"]:
-            table_path = os.path.join(output_dir, "table.csv")
+            table_path = os.path.join(output_dir, "table.txt")
             analyzer.generate_table(scores, save_path=table_path)
-            print(f"\nThe table has been saved as 'table.csv' in the '{output_dir}' directory.")
+            print(f"\nThe table has been saved as 'table.txt' in the '{output_dir}' directory.")
             
         if args.format in ["chart", "both"]:
             chart_path = os.path.join(output_dir, "chart.png")
