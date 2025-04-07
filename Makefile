@@ -30,3 +30,14 @@ readme:
 
 # PR 전에 자동으로 README 검증
 pre-commit: readme
+
+# 불필요한 파일 정리
+clean:
+	@if [ -d "$(VENV)" ]; then \
+		echo ".venv 가상 환경을 삭제합니다..."; \
+		rm -rf $(VENV); \
+	fi
+	@if [ -d "results" ]; then \
+		echo "results 디렉토리를 삭제합니다..."; \
+		rm -rf results; \
+	fi
