@@ -1,6 +1,12 @@
 # reposcore-py
 A CLI for scoring student participation in an open-source class repo, implemented in Python.
 
+>
+> **주의**
+> - 절대로 `README.md`의 내용을 직접 수정하지 말 것! (템플릿에서 자동으로 생성하는 스크립트 추가됨)
+> - 반드시 `template_README.md`의 내용을 수정한 후 `make readme` 실행하여 내용을 갱신해야 함.
+>
+
 ## Install dependencies
 
 ```bash
