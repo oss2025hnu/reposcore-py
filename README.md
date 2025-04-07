@@ -114,7 +114,7 @@ $I_d^* = I_{\text{valid}} - I_{fb}^* ~~\quad$ 남은 개수에서 문서 이슈 
 $S = 3P_{fb}^* + 2P_d^* + 2I_{fb}^* + 1I_d^*$
 
 ## 토큰 생성 방법
-`docs/github-tokne-guide.md` 문서를 참고 부탁드립니다.
+`docs/github-token-guide.md` 문서를 참고 부탁드립니다.
 
 ## 프로젝트 작성 시 주의사항
 
