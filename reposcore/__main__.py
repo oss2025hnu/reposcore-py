@@ -53,12 +53,6 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 def main():
-    # --sync-readme 플래그가 있으면 argparse 없이 처리
-    if "--sync-readme" in sys.argv:
-    # 루트에 있는 update_readme.py 사용
-        from update_readme import update_readme_section
-        update_readme_section()
-        sys.exit(0)
 
     args = parse_arguments()
 
