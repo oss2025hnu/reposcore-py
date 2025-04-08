@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from .analyzer import RepoAnalyzer
+from analyzer import RepoAnalyzer
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments"""
