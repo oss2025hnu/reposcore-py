@@ -4,7 +4,7 @@ import argparse
 import sys
 import os
 import requests
-from analyzer import RepoAnalyzer
+from .analyzer import RepoAnalyzer
 
 # 깃허브 저장소 기본 URL
 GITHUB_BASE_URL = "https://github.com/"
