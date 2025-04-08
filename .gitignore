@@ -169,3 +169,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# 분석 결과 및 캐시 파일 무시
+*.csv
+*.png
+cache.json
+

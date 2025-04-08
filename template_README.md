@@ -15,32 +15,11 @@ make requirements
 ```
 
 ## Usage
-**주의**: 이 프로젝트는 상대 임포트를 사용하므로, 반드시 프로젝트의 최상위 디렉토리에서 아래 명령으로 실행해야 합니다:
-
-```
-cd /path/to/reposcore-py
-python -m reposcore
-```
-=======
 아래는 `python -m reposcore -h` 또는 `python -m reposcore --help` 실행 결과를 붙여넣은 것이므로
 명령줄 관련 코드가 변경되면 아래 내용도 그에 맞게 수정해야 함.
 
 ```
-usage: python -m reposcore [-h] owner/repo [--output dir_name] [--format {table,chart,both}]
-
-오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구
-
-positional arguments:
-  owner/repo            분석할 GitHub 저장소 (형식: '소유자/저장소')
-
-options:
-  -h, --help            도움말 표시 후 종료
-  --output dir_name     분석 결과를 저장할 출력 디렉토리 (기본값: 'results')
-  --format {table,text,chart,both}
-                        결과 출력 형식 선택 (테이블: 'table', 텍스트 : 'text', 차트: 'chart',
-                        모두 : 'all')
-  --use-cache           participants 데이터를 캐시에서 불러올지 여부 (기본: API를 통해 새로 수집)
-  --token TOKEN         API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰
+{{ usage }}
 ```
 
 ## Test
@@ -75,3 +54,4 @@ $S = 3P_{fb}^* + 2P_d^* + 2I_{fb}^* + 1I_d^*$
 
 ## 프로젝트 작성 시 주의사항
 `docs/project_guidelines.md` 문서를 참고 부탁드립니다.
+
