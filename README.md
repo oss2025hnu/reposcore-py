@@ -18,6 +18,8 @@ make requirements
 아래는 `python -m reposcore -h` 또는 `python -m reposcore --help` 실행 결과를 붙여넣은 것이므로
 명령줄 관련 코드가 변경되면 아래 내용도 그에 맞게 수정해야 함.
 
+**⚠️ 반드시 저장소 최상위 디렉토리에서 실행해야 합니다. (`python -m reposcore` 명령은 상대 경로 기준으로 동작합니다.)**
+
 ```
 usage: python -m reposcore [-h] owner/repo [--output dir_name] [--format {table,text,chart,all}]
 
