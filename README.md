@@ -8,19 +8,9 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-아래는 `python reposcore -h` 또는 `python reposcore --help` 실행 결과를 붙여넣은 것이므로
-명령줄 관련 코드가 변경되면 아래 내용도 그에 맞게 수정해야 함.
+**주의**: 이 프로젝트는 상대 임포트를 사용하므로, 반드시 프로젝트의 최상위 디렉토리에서 아래 명령으로 실행해야 합니다:
 
 ```
-usage: __main__.py [-h] --repo REPO [--output OUTPUT] [--format {table,chart,both}]
-
-A CLI tool to score participation in an open-source course repository
-
-options:
-  -h, --help            show this help message and exit
-  --repo REPO           Path to the git repository
-  --output OUTPUT       Output directory for results
-  --format {table,chart,both}
-                        Output format
+cd /path/to/reposcore-py
+python -m reposcore
 ```
-python -m reposcore --repo owner/repo
