@@ -5,7 +5,7 @@ A CLI for scoring student participation in an open-source class repo, implemente
 > **주의**
 > - 절대로 `README.md`의 내용을 직접 수정하지 말 것! (템플릿에서 자동으로 생성하는 스크립트 추가됨)
 > - 반드시 `template_README.md`의 내용을 수정한 후 `make readme` 실행하여 내용을 갱신해야 함.
->
+> - `README.md`에 반드시 최상위 디렉토리에서 `python -m reposcore ...` 명령을 실행해야 함
 
 ## Install dependencies
 
@@ -54,4 +54,3 @@ $S = 3P_{fb}^* + 2P_d^* + 2I_{fb}^* + 1I_d^*$
 
 ## 프로젝트 작성 시 주의사항
 👉 [프로젝트 작성 시 주의사항](docs/project_guidelines.md) 문서를 참고 부탁드립니다.
-
