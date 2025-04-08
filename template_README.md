@@ -19,7 +19,8 @@ make requirements
 명령줄 관련 코드가 변경되면 아래 내용도 그에 맞게 수정해야 함.
 
 ```
-{{ usage }}
+이 프로젝트는 `reposcore` 패키지로 구성되어 있으므로, **반드시 프로젝트 최상위 디렉토리**에서 아래와 같이 실행해야 합니다
+python -m reposcore
 ```
 
 ## Test
