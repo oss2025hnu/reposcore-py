@@ -2,6 +2,8 @@
 
 import argparse
 import sys
+from analyzer import RepoAnalyzer
+=======
 import os
 import requests
 from .analyzer import RepoAnalyzer
