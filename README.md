@@ -23,3 +23,4 @@ options:
   --format {table,chart,both}
                         Output format
 ```
+python -m reposcore --repo owner/repo
