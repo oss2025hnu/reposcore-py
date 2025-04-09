@@ -10,6 +10,9 @@ from typing import Optional
 # 깃허브 저장소 기본 URL
 GITHUB_BASE_URL = "https://github.com/"
 
+# 디렉토리 구조 출력 시 제외할 디렉토리 목록
+EXCLUDED_DIRS = {".git", "__pycache__", "venv", ".venv"}
+
 # 친절한 오류 메시지를 출력할 ArgumentParser 클래스
 class FriendlyArgumentParser(argparse.ArgumentParser):
     def error(self, message):
@@ -51,6 +54,21 @@ def check_rate_limit(token: Optional[str] = None) -> None:
         print(f"GitHub API 요청 가능 횟수: {remaining} / {limit}")
     else:
         print(f"API 요청 제한 정보를 가져오는데 실패했습니다 (status code: {response.status_code}).")
+
+def show_directory_structure(path: str = ".", prefix: str = "") -> None:
+    """디렉토리 구조를 트리 형태로 출력하는 함수"""
+    try:
+        entries = sorted(e for e in os.listdir(path) if e not in EXCLUDED_DIRS)
+        for i, entry in enumerate(entries):
+            full_path = os.path.join(path, entry)
+            is_last = (i == len(entries) - 1)
+            branch = "└── " if is_last else "├── "
+            print(prefix + branch + entry)
+            if os.path.isdir(full_path):
+                extension = "    " if is_last else "│   "
+                show_directory_structure(full_path, prefix + extension)
+    except Exception as e:
+        print(f"❌ 디렉토리 구조를 출력하는 중 오류 발생: {e}", file=sys.stderr)
 
 def parse_arguments() -> argparse.Namespace:
     """커맨드라인 인자를 파싱하는 함수"""
@@ -103,6 +121,11 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="현재 GitHub API 요청 가능 횟수와 전체 한도를 확인합니다."
     )
+    parser.add_argument(
+        "--show-structure",
+        action="store_true",
+        help="현재 디렉토리 구조를 트리 형태로 출력합니다. (.git, venv 등은 생략)"
+    )
     return parser.parse_args()
 
 def main():
@@ -118,6 +141,12 @@ def main():
     # --check-limit 옵션 처리: 이 옵션이 있으면 repository 인자 없이 실행됨.
     if args.check_limit:
         check_rate_limit(token=github_token)
+        sys.exit(0)
+
+    # --show-structure 옵션 처리: 이 옵션이 있으면 repository 인자 없이 실행됨.
+    if args.show_structure:
+        print("📁 현재 디렉토리 구조:")
+        show_directory_structure()
         sys.exit(0)
 
     # --check-limit 옵션이 없으면 repository 인자는 필수임.
