@@ -9,7 +9,7 @@ from datetime import datetime
 from .utils.retry_request import retry_request
 
 import logging
-import sys  
+import sys
 import os
 
 logging.basicConfig(
@@ -22,28 +22,13 @@ def log(message: str):
     logging.info(message)
 
 def check_github_repo_exists(repo: str) -> bool:
-    return True # 지금 여러 개의 저장소를 입력하는 경우 문제를 일으키기 때문에 무조건 True로 바꿔놓음
-#    """주어진 GitHub 저장소가 존재하는지 확인하는 함수"""
-#    url = f"https://api.github.com/repos/{repo}"
-#    response = requests.get(url)
-#    
-#    if response.status_code == 403:
-#        log("⚠️ GitHub API 요청 실패: 403 (비인증 상태로 요청 횟수 초과일 수 있습니다.)")
-#        log("ℹ️ 해결 방법: --token 옵션으로 GitHub Access Token을 전달해보세요.")
-#    elif response.status_code == 404:
-#        log(f"⚠️ 저장소 '{repo}'가 존재하지 않습니다.")
-#    elif response.status_code != 200:
-#        log(f"⚠️ 요청 실패: {response.status_code}")
-#
-#    return response.status_code == 200
+    return True  # 지금 여러 개의 저장소를 입력하는 경우 문제를 일으키기 때문에 무조건 True로 바꿔놓음
 
 class RepoAnalyzer:
-    """Class to analyze repository participation for scoring"""
-
     def __init__(self, repo_path: str, token: Optional[str] = None, show_participants: bool = False):
         if not check_github_repo_exists(repo_path):
             log(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
-            sys.exit(1)  
+            sys.exit(1)
 
         self.repo_path = repo_path
         self.participants: Dict = {}
@@ -53,19 +38,14 @@ class RepoAnalyzer:
             'feat_bug_is': 2,
             'doc_is': 1
         }
-        self._data_collected = True  # 기본값을 True로 설정
-        self.show_participants = show_participants  # 참여자 출력 여부 플래그
+        self._data_collected = True
+        self.show_participants = show_participants  # ✅ 사용자 추가 기능
 
         self.SESSION = requests.Session()
-        self.SESSION.headers.update({'Authorization': token}) if token else None
+        if token:
+            self.SESSION.headers.update({'Authorization': token})
 
     def collect_PRs_and_issues(self) -> None:
-        """
-        하나의 API 호출로 GitHub 이슈 목록을 가져오고,
-        pull_request 필드가 있으면 PR로, 없으면 issue로 간주.
-        PR의 경우, 실제로 병합된 경우만 점수에 반영.
-        이슈는 open / reopened / completed 상태만 점수에 반영합니다.
-        """
         page = 1
         per_page = 100
 
@@ -80,27 +60,8 @@ class RepoAnalyzer:
                                          'per_page': per_page,
                                          'page': page
                                      })
-            if response.status_code == 403:
-                log("⚠️ 요청 실패 (403): GitHub API rate limit에 도달했습니다.")
-                log("🔑 토큰 없이 실행하면 1시간에 최대 60회 요청만 허용됩니다.")
-                log("💡 해결법: --api-key 옵션으로 GitHub 개인 액세스 토큰을 설정해 주세요.")
-                self._data_collected = False
-                return
-            elif response.status_code == 404:
-                log(f"⚠️ 요청 실패 (404): 리포지토리({self.repo_path})가 존재하지 않습니다.")
-                self._data_collected = False
-                return
-            elif response.status_code == 500:
-                log("⚠️ 요청 실패 (500): GitHub 내부 서버 오류 발생!")
-                self._data_collected = False
-                return
-            elif response.status_code == 503:
-                log("⚠️ 요청 실패 (503): 서비스 불가")
-                self._data_collected = False
-                return
-            elif response.status_code == 422:
-                log("⚠️ 요청 실패 (422): 처리할 수 없는 컨텐츠")
-                log("⚠️ 유효성 검사에 실패 했거나, 엔드 포인트가 스팸 처리되었습니다.")
+            if response.status_code in (403, 404, 500, 503, 422):
+                log(f"⚠️ 요청 실패 ({response.status_code}): {response.reason}")
                 self._data_collected = False
                 return
             elif response.status_code != 200:
@@ -123,13 +84,12 @@ class RepoAnalyzer:
                         'i_bug': 0,
                         'i_documentation': 0,
                     }
-                
+
                 labels = item.get('labels', [])
                 label_names = [label.get('name', '') for label in labels if label.get('name')]
 
                 state_reason = item.get('state_reason')
 
-                # PR 처리 (병합된 PR만)
                 if 'pull_request' in item:
                     merged_at = item.get('pull_request', {}).get('merged_at')
                     if merged_at:
@@ -137,8 +97,6 @@ class RepoAnalyzer:
                             key = f'p_{label}'
                             if key in self.participants[author]:
                                 self.participants[author][key] += 1
-
-                # 이슈 처리 (open / reopened / completed 만 포함, not planned 제외)
                 else:
                     if state_reason in ('completed', 'reopened', None):
                         for label in label_names:
@@ -146,7 +104,6 @@ class RepoAnalyzer:
                             if key in self.participants[author]:
                                 self.participants[author][key] += 1
 
-            # 다음 페이지 검사
             link_header = response.headers.get('link', '')
             if 'rel="next"' in link_header:
                 page += 1
@@ -156,15 +113,12 @@ class RepoAnalyzer:
         if not self.participants:
             log("⚠️ 수집된 데이터가 없습니다. (참여자 없음)")
             log("📄 참여자는 없지만, 결과 파일은 생성됩니다.")
-        else:
-            # 딕셔너리 출력 여부를 show_participants 플래그로 제어
-            if self.show_participants:
-                log("\n참여자별 활동 내역 (participants 딕셔너리):")
-                for user, info in self.participants.items():
-                    log(f"{user}: {info}")
+        elif self.show_participants:  # ✅ 사용자 추가 기능
+            log("\n참여자별 활동 내역 (participants 딕셔너리):")
+            for user, info in self.participants.items():
+                log(f"{user}: {info}")
 
     def calculate_scores(self) -> Dict:
-        """Calculate participation scores for each contributor using the refactored formula"""
         scores = {}
         total_score_sum = 0
 
@@ -196,11 +150,11 @@ class RepoAnalyzer:
             )
 
             scores[participant] = {
-                "feat/bug PR" : self.score['feat_bug_pr'] * p_fb_at,
-                "document PR" : self.score['doc_pr'] * p_d_at,
-                "feat/bug issue" : self.score['feat_bug_is'] * i_fb_at,
-                "document issue" : self.score['doc_is'] * i_d_at,
-                "total" : S
+                "feat/bug PR": self.score['feat_bug_pr'] * p_fb_at,
+                "document PR": self.score['doc_pr'] * p_d_at,
+                "feat/bug issue": self.score['feat_bug_is'] * i_fb_at,
+                "document issue": self.score['doc_is'] * i_d_at,
+                "total": S
             }
 
             total_score_sum += S
@@ -213,7 +167,6 @@ class RepoAnalyzer:
         return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
 
     def calculate_averages(self, scores):
-        """점수 딕셔너리에서 각 카테고리별 평균을 계산합니다."""
         if not scores:
             return {"feat/bug PR": 0, "document PR": 0, "feat/bug issue": 0, "document issue": 0, "total": 0, "rate": 0}
 
@@ -226,7 +179,7 @@ class RepoAnalyzer:
             "total": 0
         }
 
-        for participant, score_data in scores.items():
+        for score_data in scores.values():
             for category in totals.keys():
                 totals[category] += score_data[category]
 
@@ -252,10 +205,7 @@ class RepoAnalyzer:
         table = PrettyTable()
         table.field_names = ["name", "feat/bug PR", "document PR", "feat/bug issue", "document issue", "total", "rate"]
 
-        # 평균 계산
         averages = self.calculate_averages(scores)
-
-        # 평균 행 추가
         table.add_row([
             "avg",
             round(averages["feat/bug PR"], 1),
@@ -276,7 +226,7 @@ class RepoAnalyzer:
                 score['total'],
                 f'{score["rate"]:.1f}%'
             ])
-        
+
         dir_path = os.path.dirname(save_path)
         if dir_path and not os.path.exists(dir_path):
             os.makedirs(dir_path)
@@ -298,31 +248,30 @@ class RepoAnalyzer:
         plt.figure(figsize=(10, height))
         bars = plt.barh(participants, scores_sorted, height=0.5)
 
-        # 점수에 따른 색상 매핑
         for bar in bars:
             score = bar.get_width()
             if score == 100:
-                color = 'red'           # 100: 빨간색
+                color = 'red'
             elif 90 <= score < 100:
-                color = 'orchid'        # 90~99: 연보라색
+                color = 'orchid'
             elif 80 <= score < 90:
-                color = 'purple'        # 80~89: 보라색
+                color = 'purple'
             elif 70 <= score < 80:
-                color = 'darkblue'      # 70~79: 진한 청색
+                color = 'darkblue'
             elif 60 <= score < 70:
-                color = 'blue'          # 60~69: 청색
+                color = 'blue'
             elif 50 <= score < 60:
-                color = 'green'         # 50~59: 진한 연두
+                color = 'green'
             elif 40 <= score < 50:
-                color = 'lightgreen'    # 40~49: 연두색
+                color = 'lightgreen'
             elif 30 <= score < 40:
-                color = 'lightgray'     # 30~39: 밝은 회색
+                color = 'lightgray'
             elif 20 <= score < 30:
-                color = 'gray'          # 20~29: 중간 회색
+                color = 'gray'
             elif 10 <= score < 20:
-                color = 'dimgray'       # 10~19: 어두운 회색
+                color = 'dimgray'
             else:
-                color = 'black'         # 0~9: 검은색
+                color = 'black'
             bar.set_color(color)
 
         plt.xlabel('Participation Score')
@@ -330,11 +279,10 @@ class RepoAnalyzer:
         plt.suptitle(f"Total Participants: {num_participants}", fontsize=10, x=0.98, ha='right')
         plt.gca().invert_yaxis()
 
-        # 각 바의 오른쪽에 점수 표기
         for bar in bars:
             plt.text(
                 bar.get_width() + 0.2,
-                bar.get_y() + bar.get_height()/2,
+                bar.get_y() + bar.get_height() / 2,
                 f'{int(bar.get_width())}',
                 va='center',
                 fontsize=9

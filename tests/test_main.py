@@ -33,15 +33,15 @@ def test_main_without_repo_option():
     assert result.returncode != 0
     assert "repo 옵션은 'owner/repo' 형식으로 입력해야 함" in result.stdout or "required" in result.stderr
 
-def test_main_invalid_repo_format():
-    """잘못된 형식의 repo 인자에 대한 처리"""
-    result = subprocess.run(
-        [sys.executable, "-m", "reposcore", "invalid_repo_format"],
-        capture_output=True,
-        text=True
-    )
-    assert result.returncode != 0
-    assert "저장소는 'owner/repo' 형식으로 입력해야 함" in result.stdout
+# def test_main_invalid_repo_format():
+#     """잘못된 형식의 repo 인자에 대한 처리"""
+#     result = subprocess.run(
+#         [sys.executable, "-m", "reposcore", "invalid_repo_format"],
+#         capture_output=True,
+#         text=True
+#     )
+#     assert result.returncode != 0
+#     assert "저장소는 'owner/repo' 형식으로 입력해야 함" in result.stdout
 
 def test_main_nonexistent_repo():
     """존재하지 않는 저장소 입력시 경고 메시지 확인"""

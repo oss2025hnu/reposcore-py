@@ -13,14 +13,11 @@ def log(message: str):
     now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
     print(f"{now} {message}")
 
-# 깃허브 저장소 기본 URL
 GITHUB_BASE_URL = "https://github.com/"
 
-# 친절한 오류 메시지를 출력할 ArgumentParser 클래스
 class FriendlyArgumentParser(argparse.ArgumentParser):
     def error(self, message):
         if '--format' in message:
-            # --format 옵션에서만 오류 메시지를 사용자 정의
             log(f"❌ 인자 오류: {message}")
             log("사용 가능한 --format 값: table, text, chart, all")
         else:
@@ -28,12 +25,10 @@ class FriendlyArgumentParser(argparse.ArgumentParser):
         sys.exit(2)
 
 def validate_repo_format(repo: str) -> bool:
-    """Check if the repo input follows 'owner/repo' format"""
     parts = repo.split("/")
     return len(parts) == 2 and all(parts)
 
 def check_github_repo_exists(repo: str) -> bool:
-    """Check if the given GitHub repository exists"""
     url = f"https://api.github.com/repos/{repo}"
     response = requests.get(url)
     if response.status_code == 403:
@@ -43,7 +38,6 @@ def check_github_repo_exists(repo: str) -> bool:
     return response.status_code == 200
 
 def check_rate_limit(token: Optional[str] = None) -> None:
-    """현재 GitHub API 요청 가능 횟수와 전체 한도를 확인하고 출력하는 함수"""
     headers = {}
     if token:
         headers["Authorization"] = f"token {token}"
@@ -58,13 +52,11 @@ def check_rate_limit(token: Optional[str] = None) -> None:
         log(f"API 요청 제한 정보를 가져오는데 실패했습니다 (status code: {response.status_code}).")
 
 def parse_arguments() -> argparse.Namespace:
-    """커맨드라인 인자를 파싱하는 함수"""
     parser = FriendlyArgumentParser(
         prog="python -m reposcore",
         usage="python -m reposcore [-h] [owner/repo ...] [--output dir_name] [--format {table,text,chart,all}] [--check-limit] [--show-participants]",
         description="오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구"
     )
-    # 저장소 인자를 하나 이상 받도록 nargs="+"로 변경
     parser.add_argument(
         "repository",
         type=str,
@@ -107,66 +99,50 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="참여자별 활동 내역 딕셔너리를 출력합니다."
     )
-    
     return parser.parse_args()
 
 def merge_participants(overall: dict, new_data: dict) -> dict:
-    """두 participants 딕셔너리를 병합합니다."""
     for user, activities in new_data.items():
         if user not in overall:
             overall[user] = activities.copy()
         else:
-            # 각 항목별로 활동수를 누적합산합니다.
             for key, value in activities.items():
                 overall[user][key] = overall[user].get(key, 0) + value
     return overall
 
 def main():
-    """Main execution function"""
     args = parse_arguments()
-    github_token = args.token
+    github_token = args.token or os.getenv('GITHUB_TOKEN')
 
-    if not args.token:
-        github_token = os.getenv('GITHUB_TOKEN')
-    elif args.token == '-':
-        github_token = sys.stdin.readline().strip()
-
-    # --check-limit 옵션 처리: 이 옵션이 있으면 repository 인자 없이 실행됨.
     if args.check_limit:
         check_rate_limit(token=github_token)
         sys.exit(0)
 
-    repositories: List[str] = args.repository
-    # 쉼표로 여러 저장소가 입력된 경우 분리
-    final_repositories = []
-    for repo in repositories:
+    repositories: List[str] = []
+    for repo in args.repository:
         if "," in repo:
-            final_repositories.extend([r.strip() for r in repo.split(",") if r.strip()])
+            repositories.extend([r.strip() for r in repo.split(",") if r.strip()])
         else:
-            final_repositories.append(repo)
-    # 중복 제거
-    final_repositories = list(dict.fromkeys(final_repositories))
+            repositories.append(repo)
+    repositories = list(dict.fromkeys(repositories))
 
-    # 각 저장소 유효성 검사
-    for repo in final_repositories:
+    for repo in repositories:
         if not validate_repo_format(repo):
             log(f"오류: 저장소 '{repo}'는 'owner/repo' 형식으로 입력해야 합니다. 예) 'oss2025hnu/reposcore-py'")
             sys.exit(1)
         if not check_github_repo_exists(repo):
             log(f"입력한 저장소 '{repo}'가 깃허브에 존재하지 않을 수 있음.")
 
-    log(f"저장소 분석 시작: {', '.join(final_repositories)}")
+    log(f"저장소 분석 시작: {', '.join(repositories)}")
 
     overall_participants = {}
 
-    # 각 저장소별로 분석을 수행하고 participants 데이터를 병합합니다.
-    for repo in final_repositories:
+    for repo in repositories:
         log(f"분석 시작: {repo}")
-        analyzer = RepoAnalyzer(repo, token=github_token, show_participants=args.show_participants)  # 플래그 전달
-        # 저장소별 캐시 파일 생성 (예: cache_oss2025hnu_reposcore-py.json)
+        analyzer = RepoAnalyzer(repo, token=github_token, show_participants=args.show_participants)
         cache_file_name = f"cache_{repo.replace('/', '_')}.json"
         cache_path = os.path.join(args.output, cache_file_name)
-        
+
         os.makedirs(args.output, exist_ok=True)
 
         if args.use_cache and os.path.exists(cache_path):
@@ -178,15 +154,13 @@ def main():
             analyzer.collect_PRs_and_issues()
             if not getattr(analyzer, "_data_collected", True):
                 log("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 종료합니다.")
-                log("ℹ️ 인증 없이 실행한 경우 요청 횟수 제한(403)일 수 있습니다. --token 옵션을 사용해보세요.")
                 sys.exit(1)
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(analyzer.participants, f, indent=2, ensure_ascii=False)
-        overall_participants = merge_participants(overall_participants, analyzer.participants)
 
+        overall_participants = merge_participants(overall_participants, analyzer.participants)
         log(f"분석 완료: {repo}")
 
-    # 병합된 데이터를 가지고 통합 분석을 진행합니다.
     aggregator = RepoAnalyzer("multiple_repos", token=github_token)
     aggregator.participants = overall_participants
 
