@@ -5,8 +5,9 @@ import sys
 import os
 import requests
 from .analyzer import RepoAnalyzer
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
+import json
 
 def log(message: str):
     now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
@@ -18,8 +19,8 @@ GITHUB_BASE_URL = "https://github.com/"
 # 친절한 오류 메시지를 출력할 ArgumentParser 클래스
 class FriendlyArgumentParser(argparse.ArgumentParser):
     def error(self, message):
-        # --format 옵션에서만 오류 메시지를 사용자 정의
         if '--format' in message:
+            # --format 옵션에서만 오류 메시지를 사용자 정의
             log(f"❌ 인자 오류: {message}")
             log("사용 가능한 --format 값: table, text, chart, all")
         else:
@@ -28,14 +29,13 @@ class FriendlyArgumentParser(argparse.ArgumentParser):
 
 def validate_repo_format(repo: str) -> bool:
     """Check if the repo input follows 'owner/repo' format"""
-    parts = repo.split("/")  # 예: 'oss2025hnu/reposcore-py' → ['oss2025hnu', 'reposcore-py']
+    parts = repo.split("/")
     return len(parts) == 2 and all(parts)
 
 def check_github_repo_exists(repo: str) -> bool:
     """Check if the given GitHub repository exists"""
     url = f"https://api.github.com/repos/{repo}"
     response = requests.get(url)
-    # 인증 없이 요청했을 때 제한 초과 안내
     if response.status_code == 403:
         log("⚠️ GitHub API 요청 실패: 403 (비인증 상태로 요청 횟수 초과일 수 있습니다.)")
         log("ℹ️ 해결 방법: --token 옵션으로 GitHub Access Token을 전달해보세요.")
@@ -61,23 +61,16 @@ def parse_arguments() -> argparse.Namespace:
     """커맨드라인 인자를 파싱하는 함수"""
     parser = FriendlyArgumentParser(
         prog="python -m reposcore",
-        usage="python -m reposcore [-h] [owner/repo] [--output dir_name] [--format {table,text,chart,all}] [--check-limit]",
-        description="오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구",
-        add_help=False
+        usage="python -m reposcore [-h] [owner/repo ...] [--output dir_name] [--format {table,text,chart,all}] [--check-limit] [--show-participants]",
+        description="오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구"
     )
-    parser.add_argument(
-        "-h", "--help",
-        action="help",
-        help="도움말 표시 후 종료"
-    )
-    # repository 인자를 optional로 설정(nargs="?") 및 default="" 지정
+    # 저장소 인자를 하나 이상 받도록 nargs="+"로 변경
     parser.add_argument(
         "repository",
         type=str,
-        nargs="?",
-        default="",
+        nargs="+",
         metavar="owner/repo",
-        help="분석할 GitHub 저장소 (형식: '소유자/저장소'). --check-limit 옵션 사용 시 생략 가능"
+        help="분석할 GitHub 저장소들 (형식: '소유자/저장소'). 여러 저장소의 경우 공백 혹은 쉼표로 구분하여 입력"
     )
     parser.add_argument(
         "--output",
@@ -89,9 +82,10 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--format",
         choices=["table", "text", "chart", "all"],
-        default="all",
+        nargs='+',
+        default=["all"],
         metavar="{table,text,chart,all}",
-        help = "결과 출력 형식 선택 (테이블: 'table', 텍스트 : 'text', 차트: 'chart', 모두 : 'all')"
+        help="결과 출력 형식 선택 (복수 선택 가능, 예: --format table chart). 옵션: 'table', 'text', 'chart', 'all'"
     )
     parser.add_argument(
         "--use-cache",
@@ -108,7 +102,24 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="현재 GitHub API 요청 가능 횟수와 전체 한도를 확인합니다."
     )
+    parser.add_argument(
+        "--show-participants",
+        action="store_true",
+        help="참여자별 활동 내역 딕셔너리를 출력합니다."
+    )
+    
     return parser.parse_args()
+
+def merge_participants(overall: dict, new_data: dict) -> dict:
+    """두 participants 딕셔너리를 병합합니다."""
+    for user, activities in new_data.items():
+        if user not in overall:
+            overall[user] = activities.copy()
+        else:
+            # 각 항목별로 활동수를 누적합산합니다.
+            for key, value in activities.items():
+                overall[user][key] = overall[user].get(key, 0) + value
+    return overall
 
 def main():
     """Main execution function"""
@@ -125,61 +136,83 @@ def main():
         check_rate_limit(token=github_token)
         sys.exit(0)
 
-    # --check-limit 옵션이 없으면 repository 인자는 필수임.
-    if not args.repository or not validate_repo_format(args.repository):
-        log("오류: 저장소는 'owner/repo' 형식으로 입력해야 함. 예) 'oss2025hnu/reposcore-py'")
-        sys.exit(1)
+    repositories: List[str] = args.repository
+    # 쉼표로 여러 저장소가 입력된 경우 분리
+    final_repositories = []
+    for repo in repositories:
+        if "," in repo:
+            final_repositories.extend([r.strip() for r in repo.split(",") if r.strip()])
+        else:
+            final_repositories.append(repo)
+    # 중복 제거
+    final_repositories = list(dict.fromkeys(final_repositories))
 
-    if not check_github_repo_exists(args.repository):
-        log(f"입력한 저장소 '{args.repository}'가 깃허브에 존재하지 않을 수 있음.")
-
-    log(f"저장소 분석 시작: {args.repository}")
-
-    analyzer = RepoAnalyzer(args.repository, token=github_token)
-
-    output_dir = args.output
-    os.makedirs(output_dir, exist_ok=True)
-
-    
-    # 캐시 파일 경로 설정
-
-    cache_path = os.path.join(output_dir, "cache.json")
-
-    if args.use_cache and os.path.exists(cache_path):
-        log("✅ 캐시 파일이 존재합니다. 캐시에서 데이터를 불러옵니다.")
-        import json
-        with open(cache_path, "r", encoding="utf-8") as f:
-            analyzer.participants = json.load(f)
-    else:
-        log("🔄 캐시를 사용하지 않거나 캐시 파일이 없습니다. GitHub API로 데이터를 수집합니다.")
-        analyzer.collect_PRs_and_issues()
-        if not getattr(analyzer, "_data_collected", True):
-            log("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 종료합니다.")
-            log("ℹ️ 인증 없이 실행한 경우 요청 횟수 제한(403)일 수 있습니다. --token 옵션을 사용해보세요.")
+    # 각 저장소 유효성 검사
+    for repo in final_repositories:
+        if not validate_repo_format(repo):
+            log(f"오류: 저장소 '{repo}'는 'owner/repo' 형식으로 입력해야 합니다. 예) 'oss2025hnu/reposcore-py'")
             sys.exit(1)
-        import json
-        with open(cache_path, "w", encoding="utf-8") as f:
-            json.dump(analyzer.participants, f, indent=2, ensure_ascii=False)
+        if not check_github_repo_exists(repo):
+            log(f"입력한 저장소 '{repo}'가 깃허브에 존재하지 않을 수 있음.")
+
+    log(f"저장소 분석 시작: {', '.join(final_repositories)}")
+
+    overall_participants = {}
+
+    # 각 저장소별로 분석을 수행하고 participants 데이터를 병합합니다.
+    for repo in final_repositories:
+        log(f"분석 시작: {repo}")
+        analyzer = RepoAnalyzer(repo, token=github_token, show_participants=args.show_participants)  # 플래그 전달
+        # 저장소별 캐시 파일 생성 (예: cache_oss2025hnu_reposcore-py.json)
+        cache_file_name = f"cache_{repo.replace('/', '_')}.json"
+        cache_path = os.path.join(args.output, cache_file_name)
+        
+        os.makedirs(args.output, exist_ok=True)
+
+        if args.use_cache and os.path.exists(cache_path):
+            log(f"✅ 캐시 파일({cache_file_name})이 존재합니다. 캐시에서 데이터를 불러옵니다.")
+            with open(cache_path, "r", encoding="utf-8") as f:
+                analyzer.participants = json.load(f)
+        else:
+            log(f"🔄 캐시를 사용하지 않거나 캐시 파일({cache_file_name})이 없습니다. GitHub API로 데이터를 수집합니다.")
+            analyzer.collect_PRs_and_issues()
+            if not getattr(analyzer, "_data_collected", True):
+                log("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 종료합니다.")
+                log("ℹ️ 인증 없이 실행한 경우 요청 횟수 제한(403)일 수 있습니다. --token 옵션을 사용해보세요.")
+                sys.exit(1)
+            with open(cache_path, "w", encoding="utf-8") as f:
+                json.dump(analyzer.participants, f, indent=2, ensure_ascii=False)
+        overall_participants = merge_participants(overall_participants, analyzer.participants)
+
+        log(f"분석 완료: {repo}")
+
+    # 병합된 데이터를 가지고 통합 분석을 진행합니다.
+    aggregator = RepoAnalyzer("multiple_repos", token=github_token)
+    aggregator.participants = overall_participants
 
     try:
-        scores = analyzer.calculate_scores()
+        scores = aggregator.calculate_scores()
+        formats = set(args.format)
 
-        # Generate outputs based on format
+        os.makedirs(args.output, exist_ok=True)
 
-        if args.format in ["table", "text", "all"]:
-            table_path = os.path.join(output_dir, "table.csv")
-            analyzer.generate_table(scores, save_path=table_path)
-            log(f"\n csv 저장 완료: {table_path}")
+        if "all" in formats:
+            formats = {"table", "text", "chart"}
 
-        if args.format in ["text", "all"]:
-            txt_path = os.path.join(output_dir, "table.txt")
-            analyzer.generate_text(scores,txt_path)
-            log(f"\n 텍스트 저장 완료: {txt_path}")
-            
-        if args.format in ["chart", "all"]:
-            chart_path = os.path.join(output_dir, "chart.png")
-            analyzer.generate_chart(scores, save_path=chart_path)
-            log(f"\n 차트 이미지가 저장되었습니다: {chart_path}")
+        if "table" in formats:
+            table_path = os.path.join(args.output, "table.csv")
+            aggregator.generate_table(scores, save_path=table_path)
+            log(f"\nCSV 저장 완료: {table_path}")
+
+        if "text" in formats:
+            txt_path = os.path.join(args.output, "table.txt")
+            aggregator.generate_text(scores, txt_path)
+            log(f"\n텍스트 저장 완료: {txt_path}")
+
+        if "chart" in formats:
+            chart_path = os.path.join(args.output, "chart.png")
+            aggregator.generate_chart(scores, save_path=chart_path)
+            log(f"\n차트 이미지 저장 완료: {chart_path}")
 
     except Exception as e:
         log(f"Error: {str(e)}", file=sys.stderr)
