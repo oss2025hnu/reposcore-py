@@ -162,23 +162,28 @@ class RepoAnalyzer:
                 log(f"{user}: {info}")
 
     def calculate_scores(self) -> Dict:
-        """Calculate participation scores for each contributor using the refactored formula"""
+        """Calculate participation scores for each contributor using helper functions"""
+        def calculate_pr_score(p_f, p_b):
+            return p_f + p_b
+
+        def calculate_issue_score(i_f, i_b):
+            return i_f + i_b
+
+        def calculate_valid_scores(p_fb, p_d, i_fb, i_d):
+            p_valid = p_fb + min(p_d, 3 * max(p_fb, 1))
+            i_valid = min(i_fb + i_d, 4 * p_valid)
+            return p_valid, i_valid
+
         scores = {}
         total_score_sum = 0
 
-        for participant, activities in self.participants.items():
-            p_f = activities.get('p_enhancement', 0)
-            p_b = activities.get('p_bug', 0)
-            p_d = activities.get('p_documentation', 0)
-            p_fb = p_f + p_b
+        for participant, a in self.participants.items():
+            p_fb = calculate_pr_score(a.get('p_enhancement', 0), a.get('p_bug', 0))
+            i_fb = calculate_issue_score(a.get('i_enhancement', 0), a.get('i_bug', 0))
+            p_d = a.get('p_documentation', 0)
+            i_d = a.get('i_documentation', 0)
 
-            i_f = activities.get('i_enhancement', 0)
-            i_b = activities.get('i_bug', 0)
-            i_d = activities.get('i_documentation', 0)
-            i_fb = i_f + i_b
-
-            p_valid = p_fb + min(p_d, 3 * max(p_fb, 1))
-            i_valid = min(i_fb + i_d, 4 * p_valid)
+            p_valid, i_valid = calculate_valid_scores(p_fb, p_d, i_fb, i_d)
 
             p_fb_at = min(p_fb, p_valid)
             p_d_at = p_valid - p_fb_at
@@ -186,7 +191,7 @@ class RepoAnalyzer:
             i_fb_at = min(i_fb, i_valid)
             i_d_at = i_valid - i_fb_at
 
-            S = (
+            total = (
                 self.score['feat_bug_pr'] * p_fb_at +
                 self.score['doc_pr'] * p_d_at +
                 self.score['feat_bug_is'] * i_fb_at +
@@ -194,19 +199,21 @@ class RepoAnalyzer:
             )
 
             scores[participant] = {
-                "feat/bug PR" : self.score['feat_bug_pr'] * p_fb_at,
-                "document PR" : self.score['doc_pr'] * p_d_at,
-                "feat/bug issue" : self.score['feat_bug_is'] * i_fb_at,
-                "document issue" : self.score['doc_is'] * i_d_at,
-                "total" : S
+                "feat/bug PR": self.score['feat_bug_pr'] * p_fb_at,
+                "document PR": self.score['doc_pr'] * p_d_at,
+                "feat/bug issue": self.score['feat_bug_is'] * i_fb_at,
+                "document issue": self.score['doc_is'] * i_d_at,
+                "total": total
             }
 
-            total_score_sum += S
+            total_score_sum += total
 
         for participant in scores:
             total = scores[participant]["total"]
-            rate = (total / total_score_sum) * 100 if total_score_sum > 0 else 0
-            scores[participant]["rate"] = round(rate, 1)
+            scores[participant]["rate"] = (
+                round((total / total_score_sum) * 100, 1)
+                if total_score_sum else 0
+            )
 
         return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
 
