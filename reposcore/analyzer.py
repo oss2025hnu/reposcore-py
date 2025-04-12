@@ -40,7 +40,7 @@ def check_github_repo_exists(repo: str) -> bool:
 class RepoAnalyzer:
     """Class to analyze repository participation for scoring"""
 
-    def __init__(self, repo_path: str, token: Optional[str] = None):
+    def __init__(self, repo_path: str, token: Optional[str] = None, show_participants: bool = False):
         if not check_github_repo_exists(repo_path):
             log(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
             sys.exit(1)  
@@ -53,8 +53,8 @@ class RepoAnalyzer:
             'feat_bug_is': 2,
             'doc_is': 1
         }
-
         self._data_collected = True  # 기본값을 True로 설정
+        self.show_participants = show_participants  # 참여자 출력 여부 플래그
 
         self.SESSION = requests.Session()
         self.SESSION.headers.update({'Authorization': token}) if token else None
@@ -123,7 +123,7 @@ class RepoAnalyzer:
                         'i_bug': 0,
                         'i_documentation': 0,
                     }
-
+                
                 labels = item.get('labels', [])
                 label_names = [label.get('name', '') for label in labels if label.get('name')]
 
@@ -157,9 +157,11 @@ class RepoAnalyzer:
             log("⚠️ 수집된 데이터가 없습니다. (참여자 없음)")
             log("📄 참여자는 없지만, 결과 파일은 생성됩니다.")
         else:
-            log("\n참여자별 활동 내역 (participants 딕셔너리):")
-            for user, info in self.participants.items():
-                log(f"{user}: {info}")
+            # 딕셔너리 출력 여부를 show_participants 플래그로 제어
+            if self.show_participants:
+                log("\n참여자별 활동 내역 (participants 딕셔너리):")
+                for user, info in self.participants.items():
+                    log(f"{user}: {info}")
 
     def calculate_scores(self) -> Dict:
         """Calculate participation scores for each contributor using the refactored formula"""
