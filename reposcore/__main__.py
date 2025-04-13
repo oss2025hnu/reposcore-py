@@ -61,14 +61,8 @@ def parse_arguments() -> argparse.Namespace:
     """커맨드라인 인자를 파싱하는 함수"""
     parser = FriendlyArgumentParser(
         prog="python -m reposcore",
-        usage="python -m reposcore [-h] [owner/repo ...] [--output dir_name] [--format {table,text,chart,all}] [--check-limit]",
-        description="오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구",
-        add_help=False
-    )
-    parser.add_argument(
-        "-h", "--help",
-        action="help",
-        help="도움말 표시 후 종료"
+        usage="python -m reposcore [-h] [owner/repo ...] [--output dir_name] [--format {table,text,chart,all}] [--check-limit] [--show-participants]",
+        description="오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구"
     )
     # 저장소 인자를 하나 이상 받도록 nargs="+"로 변경
     parser.add_argument(
@@ -91,7 +85,7 @@ def parse_arguments() -> argparse.Namespace:
         nargs='+',
         default=["all"],
         metavar="{table,text,chart,all}",
-        help = "결과 출력 형식 선택 (복수 선택 가능, 예: --format table chart). 옵션: 'table', 'text', 'chart', 'all'"
+        help="결과 출력 형식 선택 (복수 선택 가능, 예: --format table chart). 옵션: 'table', 'text', 'chart', 'all'"
     )
     parser.add_argument(
         "--use-cache",
@@ -108,6 +102,12 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="현재 GitHub API 요청 가능 횟수와 전체 한도를 확인합니다."
     )
+    parser.add_argument(
+        "--show-participants",
+        action="store_true",
+        help="참여자별 활동 내역 딕셔너리를 출력합니다."
+    )
+    
     return parser.parse_args()
 
 def merge_participants(overall: dict, new_data: dict) -> dict:
@@ -138,9 +138,14 @@ def main():
 
     repositories: List[str] = args.repository
     # 쉼표로 여러 저장소가 입력된 경우 분리
-    final_repositories = list(dict.fromkeys(
-    [r.strip() for repo in repositories for r in repo.split(",") if r.strip()]
-    ))
+    final_repositories = []
+    for repo in repositories:
+        if "," in repo:
+            final_repositories.extend([r.strip() for r in repo.split(",") if r.strip()])
+        else:
+            final_repositories.append(repo)
+    # 중복 제거
+    final_repositories = list(dict.fromkeys(final_repositories))
 
     # 각 저장소 유효성 검사
     for repo in final_repositories:
@@ -157,7 +162,7 @@ def main():
     # 각 저장소별로 분석을 수행하고 participants 데이터를 병합합니다.
     for repo in final_repositories:
         log(f"분석 시작: {repo}")
-        analyzer = RepoAnalyzer(repo, token=github_token)
+        analyzer = RepoAnalyzer(repo, token=github_token, show_participants=args.show_participants)  # 플래그 전달
         # 저장소별 캐시 파일 생성 (예: cache_oss2025hnu_reposcore-py.json)
         cache_file_name = f"cache_{repo.replace('/', '_')}.json"
         cache_path = os.path.join(args.output, cache_file_name)
@@ -191,9 +196,8 @@ def main():
 
         os.makedirs(args.output, exist_ok=True)
 
-        os.makedirs(args.output, exist_ok=True)
         if "all" in formats:
-            formats =  {"table", "text", "chart"}
+            formats = {"table", "text", "chart"}
 
         if "table" in formats:
             table_path = os.path.join(args.output, "table.csv")
