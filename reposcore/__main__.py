@@ -160,7 +160,7 @@ def main():
 
     # 각 저장소별로 분석을 수행하고 participants 데이터를 병합합니다.
     for repo in final_repositories:
-        log(f"분석 시작: {repo}")
+        logging.info(f"분석 시작: {repo}")
         analyzer = RepoAnalyzer(repo, token=github_token)
         # 저장소별 캐시 파일 생성 (예: cache_oss2025hnu_reposcore-py.json)
         cache_file_name = f"cache_{repo.replace('/', '_')}.json"
@@ -169,21 +169,21 @@ def main():
         os.makedirs(args.output, exist_ok=True)
 
         if args.use_cache and os.path.exists(cache_path):
-            log(f"✅ 캐시 파일({cache_file_name})이 존재합니다. 캐시에서 데이터를 불러옵니다.")
+            logging.info(f"✅ 캐시 파일({cache_file_name})이 존재합니다. 캐시에서 데이터를 불러옵니다.")
             with open(cache_path, "r", encoding="utf-8") as f:
                 analyzer.participants = json.load(f)
         else:
-            log(f"🔄 캐시를 사용하지 않거나 캐시 파일({cache_file_name})이 없습니다. GitHub API로 데이터를 수집합니다.")
+            logging.info(f"🔄 캐시를 사용하지 않거나 캐시 파일({cache_file_name})이 없습니다. GitHub API로 데이터를 수집합니다.")
             analyzer.collect_PRs_and_issues()
             if not getattr(analyzer, "_data_collected", True):
-                log("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 종료합니다.")
-                log("ℹ️ 인증 없이 실행한 경우 요청 횟수 제한(403)일 수 있습니다. --token 옵션을 사용해보세요.")
+                logging.error("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 종료합니다.")
+                logging.error("ℹ️ 인증 없이 실행한 경우 요청 횟수 제한(403)일 수 있습니다. --token 옵션을 사용해보세요.")
                 sys.exit(1)
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(analyzer.participants, f, indent=2, ensure_ascii=False)
         overall_participants = merge_participants(overall_participants, analyzer.participants)
 
-        log(f"분석 완료: {repo}")
+        logging.info(f"분석 완료: {repo}")
 
     # 병합된 데이터를 가지고 통합 분석을 진행합니다.
     aggregator = RepoAnalyzer("multiple_repos", token=github_token)
@@ -202,20 +202,20 @@ def main():
         if "table" in formats:
             table_path = os.path.join(args.output, "table.csv")
             aggregator.generate_table(scores, save_path=table_path)
-            log(f"\nCSV 저장 완료: {table_path}")
+            logging.info(f"\nCSV 저장 완료: {table_path}")
 
         if "text" in formats:
             txt_path = os.path.join(args.output, "table.txt")
             aggregator.generate_text(scores, txt_path)
-            log(f"\n텍스트 저장 완료: {txt_path}")
+            logging.info(f"\n텍스트 저장 완료: {txt_path}")
 
         if "chart" in formats:
             chart_path = os.path.join(args.output, "chart.png")
             aggregator.generate_chart(scores, save_path=chart_path)
-            log(f"\n차트 이미지 저장 완료: {chart_path}")
+            logging.info(f"\n차트 이미지 저장 완료: {chart_path}")
 
     except Exception as e:
-        log(f"Error: {str(e)}", file=sys.stderr)
+        logging.error(f"Error: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":
