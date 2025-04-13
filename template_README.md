@@ -29,23 +29,6 @@ python -m reposcore [OPTIONS]
 {{ usage }}
 ```
 
-### 옵션 설명
-
-- **--check-limit**  
-  이 옵션은 GitHub API의 **레이트 리밋 정보**를 확인하는 데 사용됩니다. `repository` 인자를 생략할 수 있으며, 이 경우 잔여 요청 횟수와 전체 한도를 출력합니다.  
-  사용 예시:  
-  ```bash
-  python -m reposcore --check-limit
-  ```
-  위 명령을 실행하면, 현재 GitHub API의 잔여 요청 횟수와 전체 한도 정보가 출력되고 프로그램이 종료됩니다. 이 옵션은 선택적 옵션으로, 사용자가 필요할 때만 호출할 수 있습니다.
-
-- **repository 인자**  
-  `--check-limit` 옵션이 없을 경우, `repository` 인자는 필수로 제공되어야 하며, 올바른 형식("owner/repo")인지 검증하는 로직이 포함되어 있습니다.  
-  사용 예시:  
-  ```bash
-  python -m reposcore owner/repo
-  ```
-  `owner/repo` 형식의 리포지토리 정보를 제공해야 합니다. 올바른 형식인지 검증이 수행됩니다.
 
 ## Test
 👉 [테스트 가이드 보기](docs/test-guide.md)

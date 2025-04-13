@@ -36,18 +36,48 @@ params = {
 
 - 인증 없이: 시간당 60회 요청
 - 인증 시 (Personal Access Token): 시간당 5,000회까지 가능
-    
+
     → `Authorization: token <your_token>` 헤더로 추가해야 해요.
-    
 
 예:
 
 ```python
-session.headers.update({"Authorization": f"token {your_token}"})
-
+session.headers.update({"Authorization": f"token {your_token}"
+})
 ```
 
 [토큰 생성 방법](docs/github-token-guide.md)
+
+### ✅ `--check-limit` 옵션
+
+- 이 옵션은 GitHub API의 **잔여 요청 가능 횟수**와 **전체 한도**를 출력합니다.
+- `repository` 인자를 생략해도 사용 가능하며, 프로그램은 API 요청 없이 현재의 Rate Limit 정보만 조회하고 종료됩니다.
+
+사용 예시:
+
+```bash
+python -m reposcore --check-limit
+```
+
+출력 예:
+
+```
+GitHub API Rate Limit: 4992 / 5000 remaining
+```
+
+### ✅ `repository` 인자와 Rate Limit 관련성
+
+- GitHub 저장소(`owner/repo`)를 인자로 넘기면, 실제 데이터를 수집하기 위해 **다수의 API 호출**이 발생합니다.
+- 이때 **토큰을 설정하지 않으면** API 호출이 차단될 수 있으며, 잘못된 형식의 인자(`abcd` 또는 `repo` 등)는 오류를 발생시킵니다.
+
+예시:
+
+```bash
+python -m reposcore owner/repo  # 정상 실행
+python -m reposcore abcd        # 에러 발생 (형식 오류)
+```
+
+이런 형식 유효성 검사는 내부적으로 `owner/repo` 문자열을 검사하는 로직으로 구현되어 있습니다.
 
 ---
 
@@ -67,3 +97,4 @@ session.headers.update({"Authorization": f"token {your_token}"})
     
 2. **Python에서 `requests`로 호출해보기**
 3. **Label과 merged 상태 확인하면서 PR/Issue 분석 코드 연습**
+

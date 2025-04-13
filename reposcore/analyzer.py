@@ -2,6 +2,7 @@
 
 from typing import Dict, Optional
 import matplotlib.pyplot as plt
+
 import pandas as pd
 import requests
 from prettytable import PrettyTable
@@ -9,7 +10,7 @@ from datetime import datetime
 from .utils.retry_request import retry_request
 
 import logging
-import sys  
+import sys
 import os
 
 logging.basicConfig(
@@ -18,11 +19,15 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
+
 def log(message: str):
     logging.info(message)
 
+
 def check_github_repo_exists(repo: str) -> bool:
-    return True # 지금 여러 개의 저장소를 입력하는 경우 문제를 일으키기 때문에 무조건 True로 바꿔놓음
+    return True  # 지금 여러 개의 저장소를 입력하는 경우 문제를 일으키기 때문에 무조건 True로 바꿔놓음
+
+
 #    """주어진 GitHub 저장소가 존재하는지 확인하는 함수"""
 #    url = f"https://api.github.com/repos/{repo}"
 #    response = requests.get(url)
@@ -43,7 +48,7 @@ class RepoAnalyzer:
     def __init__(self, repo_path: str, token: Optional[str] = None):
         if not check_github_repo_exists(repo_path):
             log(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
-            sys.exit(1)  
+            sys.exit(1)
 
         self.repo_path = repo_path
         self.participants: Dict = {}
@@ -170,7 +175,7 @@ class RepoAnalyzer:
             for user, info in self.participants.items():
                 log(f"{user}: {info}")
 
-    def calculate_scores(self) -> Dict:
+    def calculate_scores(self, user_info=None) -> Dict:
         """Calculate participation scores for each contributor using the refactored formula"""
         scores = {}
         total_score_sum = 0
@@ -196,18 +201,18 @@ class RepoAnalyzer:
             i_d_at = i_valid - i_fb_at
 
             S = (
-                self.score['feat_bug_pr'] * p_fb_at +
-                self.score['doc_pr'] * p_d_at +
-                self.score['feat_bug_is'] * i_fb_at +
-                self.score['doc_is'] * i_d_at
+                    self.score['feat_bug_pr'] * p_fb_at +
+                    self.score['doc_pr'] * p_d_at +
+                    self.score['feat_bug_is'] * i_fb_at +
+                    self.score['doc_is'] * i_d_at
             )
 
             scores[participant] = {
-                "feat/bug PR" : self.score['feat_bug_pr'] * p_fb_at,
-                "document PR" : self.score['doc_pr'] * p_d_at,
-                "feat/bug issue" : self.score['feat_bug_is'] * i_fb_at,
-                "document issue" : self.score['doc_is'] * i_d_at,
-                "total" : S
+                "feat/bug PR": self.score['feat_bug_pr'] * p_fb_at,
+                "document PR": self.score['doc_pr'] * p_d_at,
+                "feat/bug issue": self.score['feat_bug_is'] * i_fb_at,
+                "document issue": self.score['doc_is'] * i_d_at,
+                "total": S
             }
 
             total_score_sum += S
@@ -216,6 +221,9 @@ class RepoAnalyzer:
             total = scores[participant]["total"]
             rate = (total / total_score_sum) * 100 if total_score_sum > 0 else 0
             scores[participant]["rate"] = round(rate, 1)
+
+        if user_info:
+            scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
 
         return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
 
@@ -283,7 +291,7 @@ class RepoAnalyzer:
                 score['total'],
                 f'{score["rate"]:.1f}%'
             ])
-        
+
         dir_path = os.path.dirname(save_path)
         if dir_path and not os.path.exists(dir_path):
             os.makedirs(dir_path)
@@ -293,6 +301,8 @@ class RepoAnalyzer:
         log(f"📝 텍스트 결과 저장 완료: {save_path}")
 
     def generate_chart(self, scores: Dict, save_path: str = "results") -> None:
+        plt.rcParams['font.family'] = ['NanumGothic', 'DejaVu Sans']
+
         sorted_scores = sorted(
             [(key, value.get('total', 0)) for (key, value) in scores.items()],
             key=lambda item: item[1],
@@ -309,27 +319,27 @@ class RepoAnalyzer:
         for bar in bars:
             score = bar.get_width()
             if score == 100:
-                color = 'red'           # 100: 빨간색
+                color = 'red'  # 100: 빨간색
             elif 90 <= score < 100:
-                color = 'orchid'        # 90~99: 연보라색
+                color = 'orchid'  # 90~99: 연보라색
             elif 80 <= score < 90:
-                color = 'purple'        # 80~89: 보라색
+                color = 'purple'  # 80~89: 보라색
             elif 70 <= score < 80:
-                color = 'darkblue'      # 70~79: 진한 청색
+                color = 'darkblue'  # 70~79: 진한 청색
             elif 60 <= score < 70:
-                color = 'blue'          # 60~69: 청색
+                color = 'blue'  # 60~69: 청색
             elif 50 <= score < 60:
-                color = 'green'         # 50~59: 진한 연두
+                color = 'green'  # 50~59: 진한 연두
             elif 40 <= score < 50:
-                color = 'lightgreen'    # 40~49: 연두색
+                color = 'lightgreen'  # 40~49: 연두색
             elif 30 <= score < 40:
-                color = 'lightgray'     # 30~39: 밝은 회색
+                color = 'lightgray'  # 30~39: 밝은 회색
             elif 20 <= score < 30:
-                color = 'gray'          # 20~29: 중간 회색
+                color = 'gray'  # 20~29: 중간 회색
             elif 10 <= score < 20:
-                color = 'dimgray'       # 10~19: 어두운 회색
+                color = 'dimgray'  # 10~19: 어두운 회색
             else:
-                color = 'black'         # 0~9: 검은색
+                color = 'black'  # 0~9: 검은색
             bar.set_color(color)
 
         plt.xlabel('Participation Score')
@@ -341,7 +351,7 @@ class RepoAnalyzer:
         for bar in bars:
             plt.text(
                 bar.get_width() + 0.2,
-                bar.get_y() + bar.get_height()/2,
+                bar.get_y() + bar.get_height() / 2,
                 f'{int(bar.get_width())}',
                 va='center',
                 fontsize=9

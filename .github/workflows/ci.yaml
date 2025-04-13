@@ -29,6 +29,8 @@ jobs:
       - name: pytest를 사용한 테스트 실행
         run: |
           pytest tests --verbose --junitxml=test-results.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       # Push, Pull request시 테스트를 시행하고 결과를 test-results.xml로 생성함
       - name: Upload test results
         if: always()

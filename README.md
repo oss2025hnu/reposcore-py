@@ -43,25 +43,10 @@ options:
   --use-cache           participants 데이터를 캐시에서 불러올지 여부 (기본: API를 통해 새로 수집)
   --token TOKEN         API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰
   --check-limit         현재 GitHub API 요청 가능 횟수와 전체 한도를 확인합니다.
+  --user-info USER_INFO
+                        사용자 정보 파일의 경로
 ```
 
-### 옵션 설명
-
-- **--check-limit**  
-  이 옵션은 GitHub API의 **레이트 리밋 정보**를 확인하는 데 사용됩니다. `repository` 인자를 생략할 수 있으며, 이 경우 잔여 요청 횟수와 전체 한도를 출력합니다.  
-  사용 예시:  
-  ```bash
-  python -m reposcore --check-limit
-  ```
-  위 명령을 실행하면, 현재 GitHub API의 잔여 요청 횟수와 전체 한도 정보가 출력되고 프로그램이 종료됩니다. 이 옵션은 선택적 옵션으로, 사용자가 필요할 때만 호출할 수 있습니다.
-
-- **repository 인자**  
-  `--check-limit` 옵션이 없을 경우, `repository` 인자는 필수로 제공되어야 하며, 올바른 형식("owner/repo")인지 검증하는 로직이 포함되어 있습니다.  
-  사용 예시:  
-  ```bash
-  python -m reposcore owner/repo
-  ```
-  `owner/repo` 형식의 리포지토리 정보를 제공해야 합니다. 올바른 형식인지 검증이 수행됩니다.
 
 ## Test
 👉 [테스트 가이드 보기](docs/test-guide.md)
@@ -105,3 +90,6 @@ $S = 3P_{fb}^* + 2P_d^* + 2I_{fb}^* + 1I_d^*$
 
 ## README.md 자동 생성 및 최신 상태 유지 가이드
 👉 [README.md 자동 생성 및 최신 상태 유지 가이드](docs/readme_version_check_guide.md) 문서를 참고 부탁드립니다.
+
+## 차트 생성시 한글 폰트 깨짐 이슈 해결 가이드
+👉 [차트 생성시 한글 폰트 깨짐 이슈 해결 가이드](docs/chart-font-guide.md) 문서를 참고 부탁드립니다.
