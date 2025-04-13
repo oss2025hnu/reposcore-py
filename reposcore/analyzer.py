@@ -19,11 +19,6 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-
-def log(message: str):
-    logging.info(message)
-
-
 def check_github_repo_exists(repo: str) -> bool:
     return True  # 지금 여러 개의 저장소를 입력하는 경우 문제를 일으키기 때문에 무조건 True로 바꿔놓음
 
@@ -33,12 +28,12 @@ def check_github_repo_exists(repo: str) -> bool:
 #    response = requests.get(url)
 #    
 #    if response.status_code == 403:
-#        log("⚠️ GitHub API 요청 실패: 403 (비인증 상태로 요청 횟수 초과일 수 있습니다.)")
-#        log("ℹ️ 해결 방법: --token 옵션으로 GitHub Access Token을 전달해보세요.")
+#        logging.warning("⚠️ GitHub API 요청 실패: 403 (비인증 상태로 요청 횟수 초과일 수 있습니다.)")
+#        logging.info("ℹ️ 해결 방법: --token 옵션으로 GitHub Access Token을 전달해보세요.")
 #    elif response.status_code == 404:
-#        log(f"⚠️ 저장소 '{repo}'가 존재하지 않습니다.")
+#        logging.warning(f"⚠️ 저장소 '{repo}'가 존재하지 않습니다.")
 #    elif response.status_code != 200:
-#        log(f"⚠️ 요청 실패: {response.status_code}")
+#        logging.warning(f"⚠️ 요청 실패: {response.status_code}")
 #
 #    return response.status_code == 200
 
@@ -47,7 +42,7 @@ class RepoAnalyzer:
 
     def __init__(self, repo_path: str, token: Optional[str] = None):
         if not check_github_repo_exists(repo_path):
-            log(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
+            logging.error(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
             sys.exit(1)
 
         self.repo_path = repo_path
@@ -86,34 +81,34 @@ class RepoAnalyzer:
                                          'page': page
                                      })
             if response.status_code == 401:
-                log("❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요.")
+                logging.error("❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요.")
                 self._data_collected = False
                 return
             elif response.status_code == 403:
-                log("⚠️ 요청 실패 (403): GitHub API rate limit에 도달했습니다.")
-                log("🔑 토큰 없이 실행하면 1시간에 최대 60회 요청만 허용됩니다.")
-                log("💡 해결법: --api-key 옵션으로 GitHub 개인 액세스 토큰을 설정해 주세요.")
+                logging.warning("⚠️ 요청 실패 (403): GitHub API rate limit에 도달했습니다.")
+                logging.info("🔑 토큰 없이 실행하면 1시간에 최대 60회 요청만 허용됩니다.")
+                logging.info("💡 해결법: --api-key 옵션으로 GitHub 개인 액세스 토큰을 설정해 주세요.")
                 self._data_collected = False
                 return
             elif response.status_code == 404:
-                log(f"⚠️ 요청 실패 (404): 리포지토리({self.repo_path})가 존재하지 않습니다.")
+                logging.warning(f"⚠️ 요청 실패 (404): 리포지토리({self.repo_path})가 존재하지 않습니다.")
                 self._data_collected = False
                 return
             elif response.status_code == 500:
-                log("⚠️ 요청 실패 (500): GitHub 내부 서버 오류 발생!")
+                logging.error("⚠️ 요청 실패 (500): GitHub 내부 서버 오류 발생!")
                 self._data_collected = False
                 return
             elif response.status_code == 503:
-                log("⚠️ 요청 실패 (503): 서비스 불가")
+                logging.warning("⚠️ 요청 실패 (503): 서비스 불가")
                 self._data_collected = False
                 return
             elif response.status_code == 422:
-                log("⚠️ 요청 실패 (422): 처리할 수 없는 컨텐츠")
-                log("⚠️ 유효성 검사에 실패 했거나, 엔드 포인트가 스팸 처리되었습니다.")
+                logging.warning("⚠️ 요청 실패 (422): 처리할 수 없는 컨텐츠")
+                logging.warning("⚠️ 유효성 검사에 실패 했거나, 엔드 포인트가 스팸 처리되었습니다.")
                 self._data_collected = False
                 return
             elif response.status_code != 200:
-                log(f"⚠️ GitHub API 요청 실패: {response.status_code}")
+                logging.warning(f"⚠️ GitHub API 요청 실패: {response.status_code}")
                 self._data_collected = False
                 return
 
@@ -163,17 +158,17 @@ class RepoAnalyzer:
                 break
 
         if not self.participants:
-            log("⚠️ 수집된 데이터가 없습니다. (참여자 없음)")
-            log("📄 참여자는 없지만, 결과 파일은 생성됩니다.")
+            logging.warning("⚠️ 수집된 데이터가 없습니다. (참여자 없음)")
+            logging.info("📄 참여자는 없지만, 결과 파일은 생성됩니다.")
         else:
             excluded_ids = {"kyahnu", "kyagrd"}
             self.participants = {
                 user: info for user, info in self.participants.items()
                 if user not in excluded_ids
             }
-            log("\n참여자별 활동 내역 (participants 딕셔너리):")
+            logging.info("\n참여자별 활동 내역 (participants 딕셔너리):")
             for user, info in self.participants.items():
-                log(f"{user}: {info}")
+                logging.info(f"{user}: {info}")
 
     def calculate_scores(self, user_info=None) -> Dict:
         """Calculate participation scores for each contributor using the refactored formula"""
@@ -261,7 +256,7 @@ class RepoAnalyzer:
             os.makedirs(dir_path)
 
         df.to_csv(save_path, index=False)
-        log(f"📊 CSV 결과 저장 완료: {save_path}")
+        logging.info(f"📊 CSV 결과 저장 완료: {save_path}")
 
     def generate_text(self, scores: Dict, save_path) -> None:
         table = PrettyTable()
@@ -298,7 +293,7 @@ class RepoAnalyzer:
 
         with open(save_path, 'w') as txt_file:
             txt_file.write(str(table))
-        log(f"📝 텍스트 결과 저장 완료: {save_path}")
+        logging.info(f"📝 텍스트 결과 저장 완료: {save_path}")
 
     def generate_chart(self, scores: Dict, save_path: str = "results") -> None:
         plt.rcParams['font.family'] = ['NanumGothic', 'DejaVu Sans']
@@ -319,27 +314,27 @@ class RepoAnalyzer:
         for bar in bars:
             score = bar.get_width()
             if score == 100:
-                color = 'red'  # 100: 빨간색
+                color = 'red'
             elif 90 <= score < 100:
-                color = 'orchid'  # 90~99: 연보라색
+                color = 'orchid'
             elif 80 <= score < 90:
-                color = 'purple'  # 80~89: 보라색
+                color = 'purple'
             elif 70 <= score < 80:
-                color = 'darkblue'  # 70~79: 진한 청색
+                color = 'darkblue'
             elif 60 <= score < 70:
-                color = 'blue'  # 60~69: 청색
+                color = 'blue'
             elif 50 <= score < 60:
-                color = 'green'  # 50~59: 진한 연두
+                color = 'green'
             elif 40 <= score < 50:
-                color = 'lightgreen'  # 40~49: 연두색
+                color = 'lightgreen'
             elif 30 <= score < 40:
-                color = 'lightgray'  # 30~39: 밝은 회색
+                color = 'lightgray'
             elif 20 <= score < 30:
-                color = 'gray'  # 20~29: 중간 회색
+                color = 'gray'
             elif 10 <= score < 20:
-                color = 'dimgray'  # 10~19: 어두운 회색
+                color = 'dimgray'
             else:
-                color = 'black'  # 0~9: 검은색
+                color = 'black'
             bar.set_color(color)
 
         plt.xlabel('Participation Score')
@@ -347,7 +342,6 @@ class RepoAnalyzer:
         plt.suptitle(f"Total Participants: {num_participants}", fontsize=10, x=0.98, ha='right')
         plt.gca().invert_yaxis()
 
-        # 각 바의 오른쪽에 점수 표기
         for bar in bars:
             plt.text(
                 bar.get_width() + 0.2,
@@ -362,4 +356,4 @@ class RepoAnalyzer:
 
         plt.tight_layout(pad=2)
         plt.savefig(save_path)
-        log(f"📈 차트 저장 완료: {save_path}")
+        logging.info(f"📈 차트 저장 완료: {save_path}")
