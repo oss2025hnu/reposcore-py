@@ -108,6 +108,11 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="현재 GitHub API 요청 가능 횟수와 전체 한도를 확인합니다."
     )
+    parser.add_argument(
+        "--user-info",
+        type=str,
+        help="사용자 정보 파일의 경로"
+    )
     return parser.parse_args()
 
 def merge_participants(overall: dict, new_data: dict) -> dict:
@@ -186,7 +191,8 @@ def main():
     aggregator.participants = overall_participants
 
     try:
-        scores = aggregator.calculate_scores()
+        user_info = json.load(open(args.user_info, "r", encoding="utf-8")) if args.user_info and os.path.exists(args.user_info) else None
+        scores = aggregator.calculate_scores(user_info)
         formats = set(args.format)
 
         os.makedirs(args.output, exist_ok=True)

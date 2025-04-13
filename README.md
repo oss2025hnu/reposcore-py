@@ -43,6 +43,8 @@ options:
   --use-cache           participants 데이터를 캐시에서 불러올지 여부 (기본: API를 통해 새로 수집)
   --token TOKEN         API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰
   --check-limit         현재 GitHub API 요청 가능 횟수와 전체 한도를 확인합니다.
+  --user-info USER_INFO
+                        사용자 정보 파일의 경로
 ```
 
 ### 옵션 설명
@@ -105,3 +107,6 @@ $S = 3P_{fb}^* + 2P_d^* + 2I_{fb}^* + 1I_d^*$
 
 ## README.md 자동 생성 및 최신 상태 유지 가이드
 👉 [README.md 자동 생성 및 최신 상태 유지 가이드](docs/readme_version_check_guide.md) 문서를 참고 부탁드립니다.
+
+## 차트 생성시 한글 폰트 깨짐 이슈 해결 가이드
+👉 [차트 생성시 한글 폰트 깨짐 이슈 해결 가이드](docs/chart-font-guide.md) 문서를 참고 부탁드립니다.

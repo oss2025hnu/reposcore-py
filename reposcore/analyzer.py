@@ -2,6 +2,7 @@
 
 from typing import Dict, Optional
 import matplotlib.pyplot as plt
+
 import pandas as pd
 import requests
 from prettytable import PrettyTable
@@ -170,7 +171,7 @@ class RepoAnalyzer:
             for user, info in self.participants.items():
                 log(f"{user}: {info}")
 
-    def calculate_scores(self) -> Dict:
+    def calculate_scores(self, user_info=None) -> Dict:
         """Calculate participation scores for each contributor using the refactored formula"""
         scores = {}
         total_score_sum = 0
@@ -216,6 +217,12 @@ class RepoAnalyzer:
             total = scores[participant]["total"]
             rate = (total / total_score_sum) * 100 if total_score_sum > 0 else 0
             scores[participant]["rate"] = round(rate, 1)
+
+        if user_info:
+            for k,v in user_info.items():
+                if user_info.get(k):
+                    scores[user_info[k]] = scores.pop(k)
+
 
         return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
 
@@ -293,6 +300,8 @@ class RepoAnalyzer:
         log(f"📝 텍스트 결과 저장 완료: {save_path}")
 
     def generate_chart(self, scores: Dict, save_path: str = "results") -> None:
+        plt.rc('font', family='NanumGothic')
+
         sorted_scores = sorted(
             [(key, value.get('total', 0)) for (key, value) in scores.items()],
             key=lambda item: item[1],
