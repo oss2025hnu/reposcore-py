@@ -409,7 +409,7 @@ class RepoAnalyzer:
         if save_dir and not os.path.exists(save_dir):
             os.makedirs(save_dir, exist_ok=True)
 
-        plt.tight_layout(pad=2)
+        plt.subplots_adjust(left=0.25, right=0.98, top=0.93, bottom=0.05)
         plt.savefig(save_path)
         logging.info(f"📈 차트 저장 완료: {save_path}")
         plt.close()
