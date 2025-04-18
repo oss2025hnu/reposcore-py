@@ -8,6 +8,7 @@ import pandas as pd
 import requests
 from prettytable import PrettyTable
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from .utils.retry_request import retry_request
 
 import logging
@@ -374,7 +375,8 @@ class RepoAnalyzer:
             bar.set_color(colormap(norm(score)))
 
         plt.xlabel('Participation Score')
-        plt.title('Repository Participation Scores')
+        timestamp = datetime.now(ZoneInfo("Asia/Seoul")).strftime("Generated at %Y-%m-%d %H:%M:%S")
+        plt.title(f'Repository Participation Scores\n{timestamp}')
         plt.suptitle(f"Total Participants: {num_participants}", fontsize=10, x=0.98, ha='right')
         plt.gca().invert_yaxis()
 
