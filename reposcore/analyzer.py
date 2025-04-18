@@ -54,6 +54,38 @@ def check_github_repo_exists(repo: str) -> bool:
 class RepoAnalyzer:
     """Class to analyze repository participation for scoring"""
 
+    # 점수 가중치
+    SCORE_WEIGHTS = {
+        'feat_bug_pr': 3,
+        'doc_pr': 2,
+        'typo_pr': 1,
+        'feat_bug_is': 2,
+        'doc_is': 1
+    }
+    
+    # 차트 설정
+    CHART_CONFIG = {
+        'height_per_participant': 0.4,  # 참여자당 차트 높이
+        'min_height': 3.0,             # 최소 차트 높이
+        'bar_height': 0.5,             # 막대 높이
+        'figure_width': 10,            # 차트 너비
+        'label_offset': 0.5,           # 레이블 오프셋
+        'font_size': 9                 # 폰트 크기
+    }
+    
+    # 등급 기준
+    GRADE_THRESHOLDS = {
+        90: 'A',
+        80: 'B',
+        70: 'C',
+        60: 'D',
+        50: 'E',
+        0: 'F'
+    }
+
+    # 사용자 제외 목록
+    EXCLUDED_USERS = {"kyahnu", "kyagrd"}
+
     def __init__(self, repo_path: str, token: Optional[str] = None):
         if not check_github_repo_exists(repo_path):
             logging.error(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
@@ -61,13 +93,7 @@ class RepoAnalyzer:
 
         self.repo_path = repo_path
         self.participants: Dict = {}
-        self.score = {
-            'feat_bug_pr': 3,
-            'doc_pr': 2,
-            'typo_pr': 1,
-            'feat_bug_is': 2,
-            'doc_is': 1
-        }
+        self.score = self.SCORE_WEIGHTS.copy()
 
         self._data_collected = True  # 기본값을 True로 설정
 
@@ -181,10 +207,9 @@ class RepoAnalyzer:
             logging.warning("⚠️ 수집된 데이터가 없습니다. (참여자 없음)")
             logging.info("📄 참여자는 없지만, 결과 파일은 생성됩니다.")
         else:
-            excluded_ids = {"kyahnu", "kyagrd"}
             self.participants = {
                 user: info for user, info in self.participants.items()
-                if user not in excluded_ids
+                if user not in self.EXCLUDED_USERS
             }
             logging.info("\n참여자별 활동 내역 (participants 딕셔너리):")
             for user, info in self.participants.items():
@@ -281,6 +306,7 @@ class RepoAnalyzer:
 
         df.to_csv(save_path, index=False)
         logging.info(f"📊 CSV 결과 저장 완료: {save_path}")
+        
         count_csv_path = os.path.join(dir_path or '.', "count.csv")
         with open(count_csv_path, 'w') as f:
             f.write("name,feat/bug PR,document PR,typo PR,feat/bug issue,document issue\n")
@@ -350,7 +376,12 @@ class RepoAnalyzer:
         )
         participants, scores_sorted = zip(*sorted_scores) if sorted_scores else ([], [])
         num_participants = len(participants)
-        height = max(3., num_participants * 0.4)
+        
+        # 클래스 상수 사용
+        height = max(
+            self.CHART_CONFIG['min_height'],
+            num_participants * self.CHART_CONFIG['height_per_participant']
+        )
 
         # 등수 계산 (동점 처리)
         ranks = []
@@ -364,8 +395,8 @@ class RepoAnalyzer:
                 ranks.append(ranks[-1])
             current_rank += 1
 
-        plt.figure(figsize=(10, height))
-        bars = plt.barh(participants, scores_sorted, height=0.5)
+        plt.figure(figsize=(self.CHART_CONFIG['figure_width'], height))
+        bars = plt.barh(participants, scores_sorted, height=self.CHART_CONFIG['bar_height'])
 
         # 동적 색상 매핑
         norm = plt.Normalize(min(scores_sorted or [0]), max(scores_sorted or [1]))
@@ -382,26 +413,20 @@ class RepoAnalyzer:
         for i, (bar, score) in enumerate(zip(bars, scores_sorted)):
             grade = ''
             if show_grade:
-                if score >= 90:
-                    grade = 'A'
-                elif score >= 80:
-                    grade = 'B'
-                elif score >= 70:
-                    grade = 'C'
-                elif score >= 60:
-                    grade = 'D'
-                elif score >= 50:
-                    grade = 'E'
-                else:
-                    grade = 'F'
-                grade = f" ({grade})"
+                # 상수 사용
+                grade_assigned = 'F'
+                for threshold, grade_letter in sorted(self.GRADE_THRESHOLDS.items(), reverse=True):
+                    if score >= threshold:
+                        grade_assigned = grade_letter
+                        break
+                grade = f" ({grade_assigned})"
 
             plt.text(
-                bar.get_width() + 0.5,
+                bar.get_width() + self.CHART_CONFIG['label_offset'],
                 bar.get_y() + bar.get_height() / 2,
                 f'{int(score)}{grade} ({ranks[i]}place)',
                 va='center',
-                fontsize=9
+                fontsize=self.CHART_CONFIG['font_size']
             )
 
         # 디렉토리가 없으면 생성
