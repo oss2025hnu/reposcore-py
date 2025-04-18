@@ -138,6 +138,12 @@ def parse_arguments() -> argparse.Namespace:
         type=str,
         help="사용자 정보 파일의 경로"
     )
+    parser.add_argument(
+        "--theme", "-t",
+        choices=["default", "dark"],
+        default="default",
+        help="테마 선택 (default 또는 dark)"
+    )
     return parser.parse_args()
 
 def merge_participants(overall: dict, new_data: dict) -> dict:
@@ -187,7 +193,7 @@ def main():
     for repo in final_repositories:
         logging.info(f"분석 시작: {repo}")
 
-        analyzer = RepoAnalyzer(repo, token=github_token)
+        analyzer = RepoAnalyzer(repo, token=github_token, theme=args.theme)
         # 저장소별 캐시 파일 생성 (예: cache_oss2025hnu_reposcore-py.json)
         cache_file_name = f"cache_{repo.replace('/', '_')}.json"
         cache_path = os.path.join(args.output, cache_file_name)
@@ -213,7 +219,7 @@ def main():
                 if args.user_info and os.path.exists(args.user_info) else None
 
             # 저장소별 aggregator 인스턴스 생성
-            repo_aggregator = RepoAnalyzer(repo, token=github_token)
+            repo_aggregator = RepoAnalyzer(repo, token=github_token, theme=args.theme)
             repo_aggregator.participants = analyzer.participants
 
             # 스코어 계산
@@ -254,7 +260,7 @@ def main():
         overall_participants = merge_participants(overall_participants, analyzer.participants)
         logging.info(f"분석 완료: {repo}")
     # 병합된 데이터를 가지고 통합 분석을 진행합니다.
-    aggregator = RepoAnalyzer("multiple_repos", token=github_token)
+    aggregator = RepoAnalyzer("multiple_repos", token=github_token, theme=args.theme)
     aggregator.participants = overall_participants
 
     try:

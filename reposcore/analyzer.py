@@ -9,6 +9,7 @@ import requests
 from prettytable import PrettyTable
 from datetime import datetime
 from .utils.retry_request import retry_request
+from .utils.theme_manager import ThemeManager 
 
 import logging
 import sys
@@ -54,7 +55,8 @@ def check_github_repo_exists(repo: str) -> bool:
 class RepoAnalyzer:
     """Class to analyze repository participation for scoring"""
 
-    def __init__(self, repo_path: str, token: Optional[str] = None):
+    def __init__(self, repo_path: str, token: Optional[str] = None, theme: str = 'default'):
+        print("🧪 RepoAnalyzer 실행됨! theme 파라미터 =", theme)
         if not check_github_repo_exists(repo_path):
             logging.error(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
             sys.exit(1)
@@ -69,11 +71,21 @@ class RepoAnalyzer:
             'doc_is': 1
         }
 
-        self._data_collected = True  # 기본값을 True로 설정
+        self.theme_manager = ThemeManager()  # 테마 매니저 초기화
+        self.set_theme(theme)                # 테마 설정
+
+        self._data_collected = True
 
         self.SESSION = requests.Session()
-        self.SESSION.headers.update({'Authorization': f'Bearer {token}'}) if token else None
+        if token:
+            self.SESSION.headers.update({'Authorization': f'Bearer {token}'})
 
+    def set_theme(self, theme_name: str) -> None:
+        if theme_name in self.theme_manager.themes:
+            self.theme_manager.current_theme = theme_name
+        else:
+            raise ValueError(f"지원하지 않는 테마입니다: {theme_name}")
+        
     def collect_PRs_and_issues(self) -> None:
         """
         하나의 API 호출로 GitHub 이슈 목록을 가져오고,
@@ -342,7 +354,18 @@ class RepoAnalyzer:
             plt.rcParams['font.family'] = ['NanumGothic']
         else:
             plt.rcParams['font.family'] = ['DejaVu Sans']  # fallback
-        
+        theme = self.theme_manager.themes[self.theme_manager.current_theme]  # 테마 가져오기
+
+        plt.rcParams['figure.facecolor'] = theme['chart']['style']['background']
+        plt.rcParams['axes.facecolor'] = theme['chart']['style']['background']
+        plt.rcParams['axes.edgecolor'] = theme['chart']['style']['text']
+        plt.rcParams['axes.labelcolor'] = theme['chart']['style']['text']
+        plt.rcParams['xtick.color'] = theme['chart']['style']['text']
+        plt.rcParams['ytick.color'] = theme['chart']['style']['text']
+        plt.rcParams['grid.color'] = theme['chart']['style']['grid']
+        plt.rcParams['text.color'] = theme['chart']['style']['text']
+
+        # 점수 정렬
         sorted_scores = sorted(
             [(key, value.get('total', 0)) for (key, value) in scores.items()],
             key=lambda item: item[1],
@@ -367,18 +390,35 @@ class RepoAnalyzer:
         plt.figure(figsize=(10, height))
         bars = plt.barh(participants, scores_sorted, height=0.5)
 
-        # 동적 색상 매핑
-        norm = plt.Normalize(min(scores_sorted or [0]), max(scores_sorted or [1]))
-        colormap = plt.colormaps['viridis']
-        for bar, score in zip(bars, scores_sorted):
-            bar.set_color(colormap(norm(score)))
+        # 색상 매핑 (기본 colormap 또는 등급별 색상)
+        if show_grade:
+            def get_grade_color(score):
+                if score >= 90:
+                    return theme['colors']['grade_colors']['A']
+                elif score >= 80:
+                    return theme['colors']['grade_colors']['B']
+                elif score >= 70:
+                    return theme['colors']['grade_colors']['C']
+                elif score >= 60:
+                    return theme['colors']['grade_colors']['D']
+                elif score >= 50:
+                    return theme['colors']['grade_colors']['E']
+                else:
+                    return theme['colors']['grade_colors']['F']
+
+            for bar, score in zip(bars, scores_sorted):
+                bar.set_color(get_grade_color(score))
+        else:
+            colormap = plt.colormaps[theme['chart']['style']['colormap']]
+            norm = plt.Normalize(min(scores_sorted or [0]), max(scores_sorted or [1]))
+            for bar, score in zip(bars, scores_sorted):
+                bar.set_color(colormap(norm(score)))
 
         plt.xlabel('Participation Score')
         plt.title('Repository Participation Scores')
         plt.suptitle(f"Total Participants: {num_participants}", fontsize=10, x=0.98, ha='right')
         plt.gca().invert_yaxis()
 
-        # 점수와 (선택적으로) 등급 표시
         for i, (bar, score) in enumerate(zip(bars, scores_sorted)):
             grade = ''
             if show_grade:
