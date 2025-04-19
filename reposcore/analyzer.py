@@ -74,6 +74,17 @@ class RepoAnalyzer:
         self.SESSION = requests.Session()
         self.SESSION.headers.update({'Authorization': f'Bearer {token}'}) if token else None
 
+    def _handle_api_error(self, status_code: int) -> bool:
+        if status_code in ERROR_MESSAGES:
+            logging.error(ERROR_MESSAGES[status_code])
+            self._data_collected = False
+            return True
+        elif status_code != 200:
+            logging.warning(f"⚠️ GitHub API 요청 실패: {status_code}")
+            self._data_collected = False
+            return True
+        return False
+
     def collect_PRs_and_issues(self) -> None:
         """
         하나의 API 호출로 GitHub 이슈 목록을 가져오고,
@@ -95,40 +106,9 @@ class RepoAnalyzer:
                                         'per_page': per_page,
                                         'page': page
                                     })
-            status_code = response.status_code
-            if status_code == 401:
-                message = ERROR_MESSAGES[status_code]
-                logging.error(message)
-                self._data_collected = False
-                return
-            elif status_code == 403:
-                message = ERROR_MESSAGES[status_code]
-                logging.error(message)
-                self._data_collected = False
-                return
-            elif status_code == 404:
-                message = ERROR_MESSAGES[status_code]
-                logging.error(message)
-                self._data_collected = False
-                return
-            elif status_code == 500:
-                message = ERROR_MESSAGES[status_code]
-                logging.error(message)
-                self._data_collected = False
-                return
-            elif status_code == 503:
-                message = ERROR_MESSAGES[status_code]
-                logging.error(message)
-                self._data_collected = False
-                return
-            elif status_code == 422:
-                message = ERROR_MESSAGES[status_code]
-                logging.error(message)
-                self._data_collected = False
-                return
-            elif status_code != 200:
-                logging.warning(f"⚠️ GitHub API 요청 실패: {response.status_code}")
-                self._data_collected = False
+           
+             # 🔽 에러 처리 부분 25줄 → 3줄로 리팩토링
+            if self._handle_api_error(response.status_code):
                 return
 
             items = response.json()
