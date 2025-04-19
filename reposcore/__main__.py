@@ -151,6 +151,15 @@ def merge_participants(overall: dict, new_data: dict) -> dict:
                 overall[user][key] = overall[user].get(key, 0) + value
     return overall
 
+def validate_token(github_token: str):
+    headers = {}
+    if github_token:
+        headers["Authorization"] = f"token {github_token}"
+    response = requests.get("https://api.github.com/user", headers=headers)
+    if response.status_code != 200:
+        logging.error('❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요.')
+        sys.exit(1)
+
 def main():
     """Main execution function"""
     args = parse_arguments()
@@ -159,6 +168,9 @@ def main():
         github_token = os.getenv('GITHUB_TOKEN')
     elif args.token == '-':
         github_token = sys.stdin.readline().strip()
+
+    if github_token and len(github_token) != 0:
+        validate_token(github_token)
 
     # --check-limit 옵션 처리: 이 옵션이 있으면 repository 인자 없이 실행됨.
     if args.check_limit:

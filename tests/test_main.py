@@ -33,6 +33,16 @@ def test_main_without_repo_option():
     assert result.returncode != 0
     assert "'owner/repo' 형식으로" in result.stdout or "required" in result.stderr
 
+def test_main_invalid_token():
+    """repo 옵션 없이 실행했을 때 에러 출력 확인"""
+    result = subprocess.run(
+        [sys.executable, "-m", "reposcore", "--token", "invalid_token", "oss2025hnu/reposcore-py"],
+        capture_output=True,
+        text=True
+    )
+    assert result.returncode != 0
+    assert "❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요." in result.stderr 
+
 # def test_main_invalid_repo_format():
 #     """잘못된 형식의 repo 인자에 대한 처리"""
 #     result = subprocess.run(
