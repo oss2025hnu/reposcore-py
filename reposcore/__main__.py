@@ -5,7 +5,7 @@ import sys
 import os
 import requests
 from .analyzer import RepoAnalyzer
-from typing import Optional, List
+import List
 from datetime import datetime
 import json
 import logging
@@ -47,7 +47,7 @@ def validate_repo_format(repo: str) -> bool:
     parts = repo.split("/")
     return len(parts) == 2 and all(parts)
 
-def check_rate_limit(token: Optional[str] = None) -> None:
+def check_rate_limit(token: str | None = None) -> None:
     """현재 GitHub API 요청 가능 횟수와 전체 한도를 확인하고 출력하는 함수"""
     headers = {}
     if token:
