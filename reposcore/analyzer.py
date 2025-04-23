@@ -8,7 +8,7 @@ import matplotlib.cm as cm
 import pandas as pd
 import requests
 from prettytable import PrettyTable
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from .utils.retry_request import retry_request
 from .utils.theme_manager import ThemeManager 
@@ -618,3 +618,42 @@ class RepoAnalyzer:
         plt.savefig(save_path)
         logging.info(f"📈 차트 저장 완료: {save_path}")
         plt.close()
+
+    def is_cache_update_required(self, cache_path: str) -> bool:
+        """캐시 데이터 업데이트 필요 여부를 확인합니다.
+
+            지정된 캐시 파일의 존재 여부 및 최종 수정 시간을 확인하여
+            캐시를 업데이트해야 하는지 여부를 결정합니다.
+
+            Args:
+                cache_path (str): 확인할 캐시 파일의 경로입니다.
+
+            Returns:
+                bool: 캐시 업데이트가 필요한 경우 True, 그렇지 않은 경우 False를 반환합니다.
+                      캐시 파일이 존재하지 않거나, 마지막 수정 시간이 특정 조건(예: 만료 시간 초과)을
+                      만족하는 경우 True를 반환할 수 있습니다.
+        """
+        url = f"https://api.github.com/repos/{self.repo_path}/issues"
+
+        response = retry_request(self.SESSION,
+                                 url,
+                                 max_retries=3,
+                                 params={
+                                     'state': 'all',
+                                     'per_page': 1,
+                                 })
+        if self._handle_api_error(response.status_code):
+            return False
+
+        response_json = response.json()[0]
+
+        if 'created_at' not in response_json:
+            logging.warning(f"⚠️ 요청 분석 실패")
+            return False
+
+        server_create_datetime = datetime.fromisoformat(response_json['created_at'])
+
+        cache_stat = os.stat(cache_path)
+        cache_create_datetime = datetime.fromtimestamp(cache_stat.st_ctime, tz=timezone.utc)
+
+        return cache_create_datetime < server_create_datetime

@@ -222,12 +222,17 @@ def main():
 
         os.makedirs(args.output, exist_ok=True)
 
-        if args.use_cache and os.path.exists(cache_path):
+        cache_update_required = True if os.path.exists(cache_path) and not analyzer.is_cache_update_required(cache_path) else False
+
+        if args.use_cache and cache_update_required:
             logging.info(f"✅ 캐시 파일({cache_file_name})이 존재합니다. 캐시에서 데이터를 불러옵니다.")
             with open(cache_path, "r", encoding="utf-8") as f:
                 analyzer.participants = json.load(f)
         else:
-            logging.info(f"🔄 캐시를 사용하지 않거나 캐시 파일({cache_file_name})이 없습니다. GitHub API로 데이터를 수집합니다.")
+            if cache_update_required:
+                logging.info(f"🔄 리포지토리의 최근 이슈 생성 시간이 캐시파일의 생성 시간보다 최근입니다. GitHub API로 데이터를 수집합니다.")
+            else:
+                logging.info(f"🔄 캐시를 사용하지 않거나 캐시 파일({cache_file_name})이 없습니다. GitHub API로 데이터를 수집합니다.")
             analyzer.collect_PRs_and_issues()
             if not getattr(analyzer, "_data_collected", True):
                 logging.error("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 종료합니다.")
@@ -240,7 +245,7 @@ def main():
             # 1) 사용자 정보 로드 (없으면 None)
             user_info = json.load(open(args.user_info, "r", encoding="utf-8")) \
                 if args.user_info and os.path.exists(args.user_info) else None
- 
+
             # 2) 미리 생성해 둔 repo_aggregator에 참가자 데이터 할당
             repo_aggregator.participants = analyzer.participants
 
