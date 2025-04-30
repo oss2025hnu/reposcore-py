@@ -175,6 +175,7 @@ class OutputHandler:
         ax.set_yticklabels(participants)
         ax.set_xlabel('점수')
         ax.set_title('참여자별 활동 점수')
+        ax.invert_yaxis()
 
         # 범례 추가
         ax.legend()
