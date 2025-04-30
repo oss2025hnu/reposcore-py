@@ -4,6 +4,10 @@ from reposcore.analyzer import RepoAnalyzer
 
 
 def test_example_calculate_scores():
+    """
+    Tests the calculate_scores method with a variety of participant activity patterns
+    to ensure scoring logic handles edge cases and proportional adjustments correctly.
+    """
     analyzer = RepoAnalyzer("oss2025hnu/reposcore-py")
     analyzer.participants = {
         "test_user1": {
@@ -111,6 +115,9 @@ def test_example_calculate_scores():
     assert scores["test_user10"]['total'] == 25, "test_user10 결과값이 일치하지 않습니다."
 
 def test_generate_table_creates_file():
+    """
+    Tests whether generate_table creates a CSV file with the given scores.
+    """
     analyzer = RepoAnalyzer("dummy/repo")
     scores = {
         "alice": {
@@ -140,6 +147,9 @@ def test_generate_table_creates_file():
 
 
 def test_generate_chart_creates_file():
+    """
+    Tests whether generate_table creates a png file with the given scores.
+    """
     analyzer = RepoAnalyzer("dummy/repo")
     scores = {
         "alice": {
