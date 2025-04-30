@@ -29,10 +29,6 @@ python -m reposcore [OPTIONS]
 {{ usage }}
 ```
 
-
-## Test
-👉 [테스트 가이드 보기](docs/test-guide.md)
-
 ## Score Formula
 아래는 PR 개수와 이슈 개수의 비율에 따라 점수로 인정가능한 최대 개수를 구하고 각 배점에 따라 최종 점수를 산출하는 공식이다.
 
@@ -62,20 +58,16 @@ $I_d^* = I_{\text{valid}} - I_{fb}^* \quad$ 남은 개수에서 문서 이슈 �
 최종 점수 계산 공식:  
 $S = 3P_{fb}^* + 2P_d^* + 1P_t^* + 2I_{fb}^* + 1I_d^*$
 
-## GitHub API 가이드
-👉 [GitHub API 가이드](docs/github_api_guide.md) 문서를 참고 부탁드립니다.
+## [프로젝트 참여 주의사항](docs/project_guidelines.md)
 
-## 토큰 생성 방법
-👉 [토큰 생성 방법](docs/github-token-guide.md) 문서를 참고 부탁드립니다.
+## [테스트 가이드](docs/test-guide.md)
 
-## 한국 시간대(Asia/Seoul) 설정 가이드
-👉 [한국 시간대(Asia/Seoul) 설정 가이드](docs/korean-timezone-guide.md) 문서를 참고 부탁드립니다.
+## [GitHub API 가이드](docs/github_api_guide.md)
 
-## 프로젝트 작성 시 주의사항
-👉 [프로젝트 작성 시 주의사항](docs/project_guidelines.md) 문서를 참고 부탁드립니다.
+## [토큰 생성 방법](docs/github-token-guide.md)
 
-## README.md 자동 생성 및 최신 상태 유지 가이드
-👉 [README.md 자동 생성 및 최신 상태 유지 가이드](docs/readme_version_check_guide.md) 문서를 참고 부탁드립니다.
+## [한국 시간대(Asia/Seoul) 설정 가이드](docs/korean-timezone-guide.md)
 
-## 차트 생성시 한글 폰트 깨짐 이슈 해결 가이드
-👉 [차트 생성시 한글 폰트 깨짐 이슈 해결 가이드](docs/chart-font-guide.md) 문서를 참고 부탁드립니다.
+## [README.md 자동 생성 및 최신 상태 유지 가이드](docs/readme_version_check_guide.md)
+
+## [차트 생성시 한글 폰트 깨짐 이슈 해결 가이드](docs/chart-font-guide.md)

@@ -1,6 +1,7 @@
 import os
 import tempfile
 from reposcore.analyzer import RepoAnalyzer
+from reposcore.output_handler import OutputHandler
 
 
 def test_example_calculate_scores():
@@ -100,6 +101,15 @@ def test_example_calculate_scores():
             "i_bug": 0,
             "i_documentation": 3,
         },
+        "test_user11": {
+            "p_enhancement": 0,
+            "p_bug": 0,
+            "p_typo": 0, 
+            "p_documentation": 0,
+            "i_enhancement": 0,
+            "i_bug": 0,
+            "i_documentation": 1,
+        },
     }
 
     scores = analyzer.calculate_scores()
@@ -113,66 +123,103 @@ def test_example_calculate_scores():
     assert scores["test_user8"]['total'] == 26, "test_user8 결과값이 일치하지 않습니다."
     assert scores["test_user9"]['total'] == 22, "test_user9 결과값이 일치하지 않습니다."
     assert scores["test_user10"]['total'] == 25, "test_user10 결과값이 일치하지 않습니다."
+    assert scores["test_user11"]['total'] == 1, "test_user11 결과값이 일치하지 않습니다."
 
 def test_generate_table_creates_file():
     """
     Tests whether generate_table creates a CSV file with the given scores.
     """
     analyzer = RepoAnalyzer("dummy/repo")
+    output_handler = OutputHandler()
     scores = {
         "alice": {
-            "p_enhancement": 3,
-            "p_bug": 0,
-            "p_typo": 1,
-            "p_documentation": 3,
-            "i_enhancement": 3,
-            "i_bug": 0,
-            "i_documentation": 3,
+            "feat/bug PR": 9,
+            "document PR": 6,
+            "typo PR": 1,
+            "feat/bug issue": 6,
+            "document issue": 3,
+            "total": 25,
+            "grade": "A"
         },
         "bob": {
-            "p_enhancement": 3,
-            "p_bug": 0,
-            "p_typo": 0,
-            "p_documentation": 3,
-            "i_enhancement": 3,
-            "i_bug": 0,
-            "i_documentation": 3,
+            "feat/bug PR": 9,
+            "document PR": 6,
+            "typo PR": 0,
+            "feat/bug issue": 6,
+            "document issue": 3,
+            "total": 24,
+            "grade": "A"
         }
     }
 
     with tempfile.TemporaryDirectory() as tmpdir:
         filepath = os.path.join(tmpdir, "test_table.csv")
-        analyzer.generate_table(scores, save_path=filepath)
+        output_handler.generate_table(scores, save_path=filepath)
         assert os.path.isfile(filepath), "CSV 파일이 생성되지 않았습니다."
 
+def test_generate_count_csv_creates_file():
+    output_handler = OutputHandler()
+    scores = {
+        "alice": {
+            "feat/bug PR": 9,
+            "document PR": 6,
+            "typo PR": 1,
+            "feat/bug issue": 6,
+            "document issue": 3,
+            "total": 25,
+            "grade": "A"
+        },
+        "bob": {
+            "feat/bug PR": 9,
+            "document PR": 6,
+            "typo PR": 0,
+            "feat/bug issue": 6,
+            "document issue": 3,
+            "total": 24,
+            "grade": "A"
+        }
+    }
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filepath = os.path.join(tmpdir, "test_scores.csv")
+        output_handler.generate_count_csv(scores, save_path=filepath)
+        assert os.path.isfile(filepath), "count.csv 파일이 생성되지 않았습니다."
+        
+        # 생성된 파일 내용 확인
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+            assert "name,feat/bug PR,document PR,typo PR,feat/bug issue,document issue,total" in content
+            assert "alice,9,6,1,6,3,25" in content
+            assert "bob,9,6,0,6,3,24" in content
 
 def test_generate_chart_creates_file():
     """
     Tests whether generate_table creates a png file with the given scores.
     """
     analyzer = RepoAnalyzer("dummy/repo")
+    output_handler = OutputHandler()
     scores = {
         "alice": {
-            "p_enhancement": 3,
-            "p_bug": 0,
-            "p_typo": 0,
-            "p_documentation": 3,
-            "i_enhancement": 3,
-            "i_bug": 0,
-            "i_documentation": 3,
+            "feat/bug PR": 9,
+            "document PR": 6,
+            "typo PR": 0,
+            "feat/bug issue": 6,
+            "document issue": 3,
+            "total": 24,
+            "grade": "A"
         },
         "bob": {
-            "p_enhancement": 3,
-            "p_bug": 0,
-            "p_typo": 0,
-            "p_documentation": 3,
-            "i_enhancement": 3,
-            "i_bug": 0,
-            "i_documentation": 3,
+            "feat/bug PR": 9,
+            "document PR": 6,
+            "typo PR": 0,
+            "feat/bug issue": 6,
+            "document issue": 3,
+            "total": 24,
+            "grade": "A"
         }
     }
 
     with tempfile.TemporaryDirectory() as tmpdir:
         filepath = os.path.join(tmpdir, "test_chart.png")
-        analyzer.generate_chart(scores, save_path=filepath)
+        output_handler.generate_chart(scores, save_path=filepath)
         assert os.path.isfile(filepath), "차트 이미지 파일이 생성되지 않았습니다."

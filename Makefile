@@ -68,7 +68,7 @@ endif
 readme: README.md
 
 # README 자동 생성
-README.md: template_README.md scripts/generate_readme.py
+README.md: template_README.md scripts/generate_readme.py reposcore/__main__.py
 	python scripts/generate_readme.py
 
 # PR 전에 자동으로 README 검증

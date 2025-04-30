@@ -1,0 +1,30 @@
+{
+    "customizations": {
+      "vscode": {
+        "extensions": [
+          "ms-python.python",
+          "njpwerner.autodocstring"
+        ],
+        "settings": {
+          // Docstring 스타일: Google 스타일 (읽기 쉬움)
+          "autoDocstring.docstringFormat": "google",
+  
+          // 함수에서 Enter 누르면 자동 생성
+          "autoDocstring.generateDocstringOnEnter": true,
+  
+          // 따옴표 스타일: Python 표준 삼중따옴표
+          "autoDocstring.quoteStyle": "\"\"\"",
+  
+          // 파라미터 이름 포함
+          "autoDocstring.includeName": true,
+  
+          // 타입 힌트도 자동 포함 (힌트가 있을 경우)
+          "autoDocstring.includeTypeHint": true,
+
+          // 함수 정의 다음 줄에서 바로 시작 (줄바꿈 없음)
+          "autoDocstring.startOnNewLine": false
+        }
+      }
+    }
+  }
+  
