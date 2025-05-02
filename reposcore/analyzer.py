@@ -297,6 +297,10 @@ class RepoAnalyzer:
             # 총점 계산
             total = self._calculate_total_score(p_fb_at, p_d_at, p_t_at, i_fb_at, i_d_at)
             
+            # cs 저장소라면 15점으로 제한
+            if "reposcore-cs" in self.repo_path:
+                total = min(total, 15)
+
             scores[participant] = self._create_score_dict(p_fb_at, p_d_at, p_t_at, i_fb_at, i_d_at, total)
             total_score_sum += total
 
