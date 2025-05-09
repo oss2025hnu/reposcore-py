@@ -278,8 +278,11 @@ def main() -> None:
 
             # 저장소별 폴더 생성 (owner/repo -> owner_repo)
             repo_safe_name = repo.replace('/', '_')
-            repo_output_dir = os.path.join(args.output, repo_safe_name)
+            overall_repo_dir = os.path.join(args.output, "overall_repository")
+            repo_output_dir = os.path.join(overall_repo_dir, repo_safe_name)
             os.makedirs(repo_output_dir, exist_ok=True)
+
+
 
             # 1) CSV 테이블 저장
             if FORMAT_TABLE in formats:
