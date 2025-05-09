@@ -96,11 +96,11 @@ class OutputHandler:
                 grade = self._calculate_grade(score['total'])
                 f.write(f"📊 {name}\n")
                 f.write(f"   총점: {score['total']:.1f} ({grade})\n")
-                f.write(f"   PR(기능/버그): {score['feat/bug PR']:.1f}\n")
-                f.write(f"   PR(문서): {score['document PR']:.1f}\n")
-                f.write(f"   PR(오타): {score['typo PR']:.1f}\n")
-                f.write(f"   이슈(기능/버그): {score['feat/bug issue']:.1f}\n")
-                f.write(f"   이슈(문서): {score['document issue']:.1f}\n\n")
+                f.write(f"   PR(기능/버그): {int(score['feat/bug PR'] / 3)}회 / {score['feat/bug PR']:.1f}점\n")
+                f.write(f"   PR(문서): {int(score['document PR'] / 2)}회 / {score['document PR']:.1f}점\n")
+                f.write(f"   PR(오타): {int(score['typo PR'] / 1)}회 / {score['typo PR']:.1f}점\n")
+                f.write(f"   이슈(기능/버그): {int(score['feat/bug issue'] / 2)}회 / {score['feat/bug issue']:.1f}점\n")
+                f.write(f"   이슈(문서): {int(score['document issue'] / 1)}회 / {score['document issue']:.1f}점\n\n")
 
     def _calculate_activity_ratios(self, participant_scores: dict) -> tuple[float, float, float]:
         """활동 비율 계산"""
