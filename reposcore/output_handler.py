@@ -190,7 +190,12 @@ class OutputHandler:
         ax.set_yticks(y_pos)
         ax.set_yticklabels(participants)
         ax.set_xlabel('Score')
-        ax.set_title('Repository Contribution Scores')
+        ax.set_title(
+            f'Repository Contribution Scores\n(분석 기준 시각: {timestamp})',
+            fontsize=14,
+            loc='center',  # 또는 'left', 'right'
+            color='black'
+        )
         ax.invert_yaxis()
 
         # 범례 추가 (테두리 없음)
@@ -199,15 +204,6 @@ class OutputHandler:
         # 가로축 여백 조정 (텍스트 잘림 방지)
         max_score = max(total_scores) if total_scores else 100
         ax.set_xlim(0, max_score + max_score * self.CHART_CONFIG['text_padding'])
-
-        plt.gcf().text(
-            0.95, 0.01,
-            f"분석 기준 시각: {timestamp}",
-            ha='right',
-            va='bottom',
-            fontsize=8,
-            color='gray'
-        )
 
         # 여백 조정
         plt.tight_layout()
