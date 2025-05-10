@@ -3,7 +3,8 @@
       "vscode": {
         "extensions": [
           "ms-python.python",
-          "njpwerner.autodocstring"
+          "njpwerner.autodocstring",
+          "mechatroner.rainbow-csv"
         ],
         "settings": {
           // Docstring 스타일: Google 스타일 (읽기 쉬움)
