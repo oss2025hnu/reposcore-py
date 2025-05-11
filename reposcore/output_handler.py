@@ -131,7 +131,7 @@ class OutputHandler:
         pr_ratio = total_pr / total
         issue_ratio = total_issue / total
         code_ratio = (sum(score['feat/bug PR'] for score in participant_scores.values()) + 
-                     sum(score['feat/bug issue'] for score in participant_scores.values())) / total
+                    sum(score['feat/bug issue'] for score in participant_scores.values())) / total
 
         return pr_ratio, issue_ratio, code_ratio
 
@@ -185,16 +185,21 @@ class OutputHandler:
             if show_grade:
                 grade = self._calculate_grade(total)
                 ax.text(total + 1, i, f'{total:.1f} ({grade})', 
-                       va='center', fontsize=self.CHART_CONFIG['font_size'])
+                    va='center', fontsize=self.CHART_CONFIG['font_size'])
             else:
                 ax.text(total + 1, i, f'{total:.1f}', 
-                       va='center', fontsize=self.CHART_CONFIG['font_size'])
+                    va='center', fontsize=self.CHART_CONFIG['font_size'])
 
         # 축 설정
         ax.set_yticks(y_pos)
         ax.set_yticklabels(participants)
         ax.set_xlabel('Score')
-        ax.set_title('Repository Contribution Scores')
+        ax.set_title(
+            f'Repository Contribution Scores\n(분석 기준 시각: {timestamp})',
+            fontsize=14,
+            loc='center',  # 또는 'left', 'right'
+            color='black'
+        )
         ax.invert_yaxis()
 
         # 범례 추가 (테두리 없음)
