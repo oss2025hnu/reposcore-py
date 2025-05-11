@@ -152,6 +152,9 @@ def merge_participants(
     return overall
 
 def validate_token(github_token: str) -> None:
+    """
+    주어진 GitHub 토큰의 유효성을 검사합니다.
+    """    
     headers = {}
     if github_token:
         headers["Authorization"] = f"token {github_token}"

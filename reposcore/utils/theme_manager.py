@@ -1,10 +1,17 @@
 class ThemeManager:
     def __init__(self) -> None:
+        """
+        ThemeManager 인스턴스를 초기화합니다.  
+        기본 테마를 포함한 테마 정보를 설정합니다.
+        """        
         self.themes = {}
         self.current_theme = 'default'
         self._initialize_default_themes()
 
     def _initialize_default_themes(self) -> None:
+        """
+        기본 테마와 다크 테마의 색상 및 스타일 설정을 초기화합니다.
+        """        
         self.themes['default'] = {
             'colors': {
                 'primary': '#007bff',

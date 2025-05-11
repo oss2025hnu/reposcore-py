@@ -72,6 +72,14 @@ class RepoAnalyzer:
     EXCLUDED_USERS = {"kyahnu", "kyagrd"}
 
     def __init__(self, repo_path: str, token: Optional[str] = None, theme: str = 'default'):
+        """
+        분석기 클래스의 인스턴스를 초기화합니다.
+
+        Args:
+            repo_path (str):  GitHub 저장소 경로 (예: 'owner/repo').
+            token (Optional[str], optional): GitHub Personal Access Token(PAT). 기본값은 None입니다.
+            theme (str, optional): 사용할 테마 이름. 기본값은 'default'입니다.
+        """        
         if not check_github_repo_exists(repo_path, bypass=True): #테스트 중이므로 무조건 True 반환
             logging.error(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
             sys.exit(1)
@@ -90,12 +98,30 @@ class RepoAnalyzer:
             self.SESSION.headers.update({'Authorization': f'Bearer {token}'})
 
     def set_theme(self, theme_name: str) -> None:
+        """
+        현재 사용할 테마를 설정합니다.
+
+        Args:
+            theme_name (str): 사용할 테마 이름 (예: 'default', 'dark').
+
+        Raises:
+            ValueError: 지원하지 않는 테마 이름일 경우 예외를 발생시킵니다.
+        """
         if theme_name in self.theme_manager.themes:
             self.theme_manager.current_theme = theme_name
         else:
             raise ValueError(f"지원하지 않는 테마입니다: {theme_name}")
 
     def _handle_api_error(self, status_code: int) -> bool:
+         """
+        GitHub API 요청 실패 시 상태 코드에 따라 오류를 처리합니다.
+
+        Args:
+            status_code (int): API 응답의 HTTP 상태 코드.
+
+        Returns:
+            bool: 오류가 처리되었으면 True, 그렇지 않으면 False를 반환합니다.
+        """
         if status_code in ERROR_MESSAGES:
             logging.error(ERROR_MESSAGES[status_code])
             self._data_collected = False
@@ -310,6 +336,18 @@ class RepoAnalyzer:
         return averages
 
     def generate_table(self, scores: Dict[str, Dict[str, float]], save_path) -> None:
+        """
+        참가자들의 점수 데이터를 CSV 파일로 저장합니다.
+        또한 점수를 환산한 활동 횟수 정보도 별도의 count.csv 파일로 저장합니다.
+
+        Args:
+            scores (Dict[str, Dict[str, float]]): 참가자별 기여 항목 점수 정보입니다.
+            save_path (str): 결과 CSV 파일을 저장할 경로입니다.
+
+        저장되는 파일:
+            - [지정한 경로].csv: 기여 점수 데이터
+            - count.csv: PR/이슈 항목별 활동 개수 데이터
+        """
         df = pd.DataFrame.from_dict(scores, orient="index")
         df.reset_index(inplace=True)
         df.rename(columns={"index": "name"}, inplace=True)
@@ -334,6 +372,18 @@ class RepoAnalyzer:
         logging.info(f"📄 활동 개수 CSV 저장 완료: {count_csv_path}")
 
     def generate_text(self, scores: Dict[str, Dict[str, float]], save_path) -> None:
+        """
+        참가자들의 점수 데이터를 PrettyTable 형식의 텍스트로 저장합니다.
+        평균 데이터도 상단에 함께 출력됩니다.
+
+        Args:
+            scores (Dict[str, Dict[str, float]]): 참가자별 기여 항목 점수 정보입니다.
+            save_path (str): 텍스트 파일을 저장할 경로입니다.
+
+        내용:
+            - 각 참가자의 PR/이슈 점수, 총점, 환산율(rate)을 포함
+            - 상단에 평균값 행 및 생성 시각도 표시
+        """
         table = PrettyTable()
         table.field_names = ["name", "feat/bug PR", "document PR", "typo PR","feat/bug issue", "document issue", "total", "rate"]
 
@@ -398,6 +448,26 @@ class RepoAnalyzer:
         return feat_bug_ratio, doc_ratio, typo_ratio
 
     def generate_chart(self, scores: Dict[str, Dict[str, float]], save_path: str, show_grade: bool = False) -> None:
+        """
+        참가자들의 점수 데이터를 기반으로 수평 막대 차트를 생성하고 PNG 파일로 저장합니다.
+
+        Args:
+            scores (Dict[str, Dict[str, float]]): 참가자별 점수 데이터입니다.
+            save_path (str): 생성된 차트 이미지를 저장할 경로입니다.
+            show_grade (bool): True일 경우 점수에 따른 등급(A~F)을 색상 및 텍스트로 표시합니다. 기본값은 False입니다.
+
+        기능:
+            - 한글 글꼴 자동 적용 (Linux 환경 대응)
+            - 현재 선택된 테마에 따라 차트 스타일 적용
+            - 점수 정렬 및 순위 계산
+            - 점수에 따른 등급 색상 혹은 colormap 적용
+            - 개별 막대 옆에 점수, 등급, 비율(기능/문서/오타 활동 비율) 표시
+            - 참가자 수에 따라 높이 자동 조절
+            - 저장 경로가 없으면 디렉터리 자동 생성
+
+        저장 결과:
+            - 지정된 경로에 PNG 차트 파일이 저장됩니다.
+        """
 
       # Linux 환경에서 CJK 폰트 수동 설정
         # OSS 한글 폰트인 본고딕, 나눔고딕, 백묵 중 순서대로 하나를 선택
