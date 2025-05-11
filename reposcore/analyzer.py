@@ -2,6 +2,7 @@
 import json
 import requests
 from datetime import datetime, timezone
+from collections import defaultdict
 from zoneinfo import ZoneInfo
 
 from .common_utils import *
@@ -46,28 +47,28 @@ class RepoAnalyzer:
         'feat_bug_is': 2,
         'doc_is': 1
     }
-    
+
     # 사용자 제외 목록
     EXCLUDED_USERS = {"kyahnu", "kyagrd"}
 
     def __init__(self, repo_path: str, token: str | None = None, theme: str = 'default'):
         # 테스트용 저장소나 통합 분석용 저장소 식별
-        self._is_test_repo = repo_path == "dummy/repo"
+        self._is_test_repo = False
         self._is_multiple_repos = repo_path == "multiple_repos"
-        
+
         # 테스트용이나 통합 분석용이 아닌 경우에만 실제 저장소 존재 여부 확인
-        if not self._is_test_repo and not self._is_multiple_repos:
-            if not check_github_repo_exists(repo_path):
-                logging.error(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
-                sys.exit(1)
-        elif self._is_test_repo:
-            logging.info(f"ℹ️ [TEST MODE] '{repo_path}'는 테스트용 저장소로 간주합니다.")
-        elif self._is_multiple_repos:
+        if self._is_multiple_repos:
             logging.info(f"ℹ️ [통합 분석] 여러 저장소의 통합 분석을 수행합니다.")
+        elif not check_github_repo_exists(repo_path):
+            logging.error(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
+            sys.exit(1)
 
         self.repo_path = repo_path
         self.participants: dict[str, dict[str, int]] = {}
         self.score = self.SCORE_WEIGHTS.copy()
+
+        self.weekly_activity = defaultdict(lambda: {'pr': 0, 'issue': 0})
+        self.semester_start_date = None
 
         self.theme_manager = ThemeManager()  # 테마 매니저 초기화
         self.set_theme(theme)                # 테마 설정
@@ -78,6 +79,9 @@ class RepoAnalyzer:
         self.SESSION = requests.Session()
         if token:
             self.SESSION.headers.update({'Authorization': f'Bearer {token}'})
+
+    # ... 이하 동일 (기존 함수와 로직은 유지됨)
+
 
     @property
     def previous_create_at(self) -> int | None:
@@ -114,6 +118,25 @@ class RepoAnalyzer:
         PR의 경우, 실제로 병합된 경우만 점수에 반영.
         이슈는 open / reopened / completed 상태만 점수에 반영합니다.
         """
+
+        if self._is_test_repo:
+            logging.info(f"ℹ️ [TEST MODE] 더미 저장소 데이터 수동 삽입 중...")
+            self.participants = {
+                "alice": {
+                    'p_enhancement': 2, 'p_bug': 1, 'p_documentation': 1, 'p_typo': 0,
+                    'i_enhancement': 1, 'i_bug': 2, 'i_documentation': 0,
+                },
+                "bob": {
+                    'p_enhancement': 1, 'p_bug': 0, 'p_documentation': 2, 'p_typo': 1,
+                    'i_enhancement': 1, 'i_bug': 0, 'i_documentation': 1,
+                }
+            }
+            self.weekly_activity = {
+                1: {"pr": 2, "issue": 1},
+                2: {"pr": 1, "issue": 2},
+            }
+            return
+
         # 테스트용 저장소나 통합 분석용인 경우 API 호출을 건너뜁니다
         if self._is_test_repo:
             logging.info(f"ℹ️ [TEST MODE] '{self.repo_path}'는 테스트용 저장소입니다. 실제 GitHub API 호출을 수행하지 않습니다.")
@@ -151,6 +174,14 @@ class RepoAnalyzer:
                     return
 
                 server_create_datetime = datetime.fromisoformat(item['created_at'])
+
+                if self.semester_start_date:
+                    created_date = server_create_datetime.astimezone(ZoneInfo("Asia/Seoul")).date()
+                    week_index = (created_date - self.semester_start_date).days // 7 + 1
+                    if 'pull_request' in item and item.get('pull_request', {}).get('merged_at'):
+                        self.weekly_activity[week_index]['pr'] += 1
+                    elif item.get('state_reason') in ('completed', 'reopened', None):
+                        self.weekly_activity[week_index]['issue'] += 1
 
                 self.__previous_create_at = server_create_datetime if self.__previous_create_at is None else max(self.__previous_create_at,server_create_datetime)
 
@@ -273,6 +304,10 @@ class RepoAnalyzer:
             scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
 
         return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
+    
+    def set_semester_start_date(self, date: datetime.date) -> None:
+        """--semester-start 옵션에서 받은 학기 시작일 저장"""
+        self.semester_start_date = date
 
     def calculate_scores(self, user_info: dict[str, str] | None = None) -> dict[str, dict[str, float]]:
         """참여자별 점수 계산"""

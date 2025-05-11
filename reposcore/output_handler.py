@@ -78,6 +78,22 @@ class OutputHandler:
         with open(save_path, 'w', encoding='utf-8') as f:
             f.write(str(table))
 
+    def _set_korean_font(self):
+        font_candidates = [
+            "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/truetype/baekmuk/baekmuk.ttf",
+        ]
+        for path in font_candidates:
+            if os.path.exists(path):
+                fm.fontManager.addfont(path)
+                font_name = fm.FontProperties(fname=path).get_name()
+                plt.rcParams['font.family'] = font_name
+                return
+        # fallback: 한글은 안되지만 최소한 오류는 안 나게
+        plt.rcParams["font.family"] = "DejaVu Sans"
+        print("⚠️ 한글 지원 폰트를 찾지 못해 DejaVu Sans를 사용합니다.")
+
     def generate_count_csv(self, scores: dict, save_path: str = None) -> None:
         """결과를 CSV 파일로 출력"""
         df = pd.DataFrame.from_dict(scores, orient='index')
@@ -123,6 +139,7 @@ class OutputHandler:
         """결과를 차트로 출력: PR과 이슈를 단일 스택형 막대 그래프로 통합"""
         # Linux 환경에서 CJK 폰트 수동 설정
         # OSS 한글 폰트인 본고딕, 나눔고딕, 백묵 중 순서대로 하나를 선택
+        self._set_korean_font()
         font_paths = [
             '/usr/share/fonts/truetype/nanum/NanumGothic.ttf',  # 나눔고딕
             '/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc',  # 본고딕
@@ -193,3 +210,31 @@ class OutputHandler:
         # 저장
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.close() 
+
+    def generate_weekly_chart(self, weekly_data: dict[int, dict[str, int]], semester_start: datetime.date, save_path: str) -> None:
+        """주차별 PR/이슈 활동량을 막대 그래프로 시각화"""
+        self._set_korean_font()  
+        weeks = sorted(weekly_data.keys())
+        pr_counts = [weekly_data[week]['pr'] for week in weeks]
+        issue_counts = [weekly_data[week]['issue'] for week in weeks]
+        labels = [f"Week {week}" for week in weeks]
+
+        fig, ax = plt.subplots(figsize=(12, 6))
+        bar_width = 0.4
+        index = range(len(weeks))
+
+        ax.bar([i - bar_width / 2 for i in index], pr_counts, width=bar_width, label='PR', color='skyblue')
+        ax.bar([i + bar_width / 2 for i in index], issue_counts, width=bar_width, label='Issue', color='lightgreen')
+
+        ax.set_xlabel("주차")
+        ax.set_ylabel("활동 수")
+        ax.set_title("주차별 GitHub 활동량 (PR/Issue)")
+        ax.set_xticks(index)
+        ax.set_xticklabels(labels, rotation=45)
+        ax.legend()
+        ax.grid(True, axis='y', linestyle='--', alpha=0.6)
+
+        plt.tight_layout()
+        plt.savefig(save_path, dpi=300)
+        plt.close()
+
