@@ -1,4 +1,4 @@
-from reposcore.retry_decorators import retry
+from reposcore.decorators import retry
 import pytest
 from urllib.error import URLError
 
