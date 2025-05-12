@@ -1,6 +1,7 @@
+from reposcore.decorators import retry
 import pytest
 from urllib.error import URLError
-from reposcore.utils.decorators import retry
+
 
 class Dummy:
     def __init__(self):
