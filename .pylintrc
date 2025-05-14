@@ -1,0 +1,8 @@
+[MESSAGES CONTROL]
+disable=all
+enable=syntax-error, undefined-variable
+
+[REPORTS]
+output-format=colorized
+reports=no
+score=no

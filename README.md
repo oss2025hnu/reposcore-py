@@ -134,6 +134,8 @@ $S = 3P_{fb}^* + 2P_d^* + 1P_t^* + 2I_{fb}^* + 1I_d^*$
 ### 📊 도구 활용
 - [README.md 자동 생성 및 최신 상태 유지 가이드](docs/readme_version_check_guide.md)
   - README 자동화 방법.
+- [Pylint 사용 가이드](docs/pylint.md)
+  - Pylint를 사용한 검사 기능 사용 방법.
 
 ### 🔗 GitHub 관련 기능
 - [GitHub API 가이드](docs/github_api_guide.md)

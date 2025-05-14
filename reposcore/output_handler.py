@@ -160,6 +160,27 @@ class OutputHandler:
 
         timestamp = self.get_kst_timestamp()
 
+        # 등수를 영어 서수로 변환하는 함수
+        def get_ordinal_suffix(rank: int) -> str:
+            if rank == 1:
+                return "1st"
+            elif rank == 2:
+                return "2nd"
+            elif rank == 3:
+                return "3rd"
+            else:
+                return f"{rank}th"
+
+        # 정렬된 참여자 리스트 만들기
+        sorted_scores = sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True)
+        participants = [user for user, _ in sorted_scores]
+        total_scores = [score_data["total"] for _, score_data in sorted_scores]
+        pr_scores = [score_data["feat/bug PR"] + score_data["document PR"] + score_data["typo PR"] for _, score_data in sorted_scores]
+        issue_scores = [score_data["feat/bug issue"] + score_data["document issue"] for _, score_data in sorted_scores]
+
+        # ✅ 서수 등수 붙이기
+        ranked_participants = [f"{user} ({get_ordinal_suffix(i+1)})" for i, user in enumerate(participants)]
+
         for font_path in font_paths:
             if os.path.exists(font_path):
                 fm.fontManager.addfont(font_path)
@@ -205,8 +226,8 @@ class OutputHandler:
                     va='center', fontsize=self.CHART_CONFIG['font_size'])
 
         # 축 설정
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels(participants)
+        ax.set_yticks(range(len(ranked_participants)))
+        ax.set_yticklabels(ranked_participants)
         ax.set_xlabel('Score')
         ax.set_title(
             f'Repository Contribution Scores\n(분석 기준 시각: {timestamp})',
@@ -244,6 +265,22 @@ class OutputHandler:
         sorted_users = sorted(scores.items(), key=lambda x: x[1].get("total", 0), reverse=True)
         usernames = [user for user, _ in sorted_users]
 
+        # 서수 붙이기 (1st, 2nd, 3rd ...)
+        def get_ordinal_suffix(rank: int) -> str:
+            if rank == 1:
+                return "1st"
+            elif rank == 2:
+                return "2nd"
+            elif rank == 3:
+                return "3rd"
+            else:
+                return f"{rank}th"
+
+        ranked_usernames = [f"{user} ({get_ordinal_suffix(i+1)})" for i, user in enumerate(usernames)]
+
+        usernames = usernames[::-1]
+        ranked_usernames = ranked_usernames[::-1]
+
         # 저장소별 점수 추출
         scores_by_repo = {
             repo: [scores[user].get(repo, 0) for user in usernames]
@@ -269,7 +306,7 @@ class OutputHandler:
         plt.title("사용자별 저장소 기여도 (py/js/cs)")
         plt.legend(loc="upper right")
         plt.tight_layout()
-        plt.gca().invert_yaxis()
+        plt.yticks(range(len(ranked_usernames)), ranked_usernames)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.close()
 

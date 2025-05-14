@@ -1,10 +1,13 @@
 {
-    "customizations": {
+  "postCreateCommand": "pip install -r requirements-dev.txt",
+  
+  "customizations": {
       "vscode": {
         "extensions": [
           "ms-python.python",
           "njpwerner.autodocstring",
-          "mechatroner.rainbow-csv"
+          "mechatroner.rainbow-csv",
+          "ritwickdey.LiveServer"
         ],
         "settings": {
           // Docstring 스타일: Google 스타일 (읽기 쉬움)
@@ -23,9 +26,13 @@
           "autoDocstring.includeTypeHint": true,
 
           // 함수 정의 다음 줄에서 바로 시작 (줄바꿈 없음)
-          "autoDocstring.startOnNewLine": false
+          "autoDocstring.startOnNewLine": false,
+          
+          // pylint 기본 문법 오류 중심 활성화
+          "python.linting.enabled": true,
+          "python.linting.pylintEnabled": true,
+          "python.linting.pylintArgs": ["--disable=all", "--enable=syntax-error,undefined-variable"]
         }
       }
     }
-  }
-  
+}
