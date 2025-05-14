@@ -14,14 +14,8 @@ from .analyzer import RepoAnalyzer
 from .output_handler import OutputHandler
 from . import common_utils
 
-# 포맷 상수
-FORMAT_TABLE = "table"
-FORMAT_TEXT = "text"
-FORMAT_CHART = "chart"
-FORMAT_ALL = "all"
-
-VALID_FORMATS = [FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART, FORMAT_ALL]
-VALID_FORMATS_DISPLAY = ", ".join(VALID_FORMATS)
+#포맷 상수 임포
+from reposcore.constants import FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART, FORMAT_ALL, VALID_FORMATS, VALID_FORMATS_DISPLAY
 
 # 친절한 오류 메시지를 출력할 ArgumentParser 클래스
 class FriendlyArgumentParser(argparse.ArgumentParser):

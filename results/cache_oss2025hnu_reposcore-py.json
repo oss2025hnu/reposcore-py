@@ -1,0 +1,626 @@
+{
+  "update_time": 1747193201,
+  "participants": {
+    "smallisl": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "Bluewak": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "jinho131": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 3,
+      "p_typo": 0,
+      "i_enhancement": 5,
+      "i_bug": 1,
+      "i_documentation": 2
+    },
+    "MING9UCCI": {
+      "p_enhancement": 3,
+      "p_bug": 2,
+      "p_documentation": 4,
+      "p_typo": 0,
+      "i_enhancement": 5,
+      "i_bug": 1,
+      "i_documentation": 1
+    },
+    "jungsuryeon": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 1,
+      "i_documentation": 2
+    },
+    "seoyoomi": {
+      "p_enhancement": 2,
+      "p_bug": 0,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 9,
+      "i_bug": 0,
+      "i_documentation": 6
+    },
+    "porvs": {
+      "p_enhancement": 2,
+      "p_bug": 1,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 5,
+      "i_bug": 0,
+      "i_documentation": 3
+    },
+    "Sernn0": {
+      "p_enhancement": 5,
+      "p_bug": 2,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 4,
+      "i_bug": 1,
+      "i_documentation": 4
+    },
+    "hyn033": {
+      "p_enhancement": 2,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "weeksun02": {
+      "p_enhancement": 2,
+      "p_bug": 0,
+      "p_documentation": 4,
+      "p_typo": 0,
+      "i_enhancement": 3,
+      "i_bug": 2,
+      "i_documentation": 8
+    },
+    "speedmult": {
+      "p_enhancement": 3,
+      "p_bug": 2,
+      "p_documentation": 5,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 3
+    },
+    "JosephStalin0305": {
+      "p_enhancement": 10,
+      "p_bug": 1,
+      "p_documentation": 4,
+      "p_typo": 0,
+      "i_enhancement": 15,
+      "i_bug": 6,
+      "i_documentation": 5
+    },
+    "jeonggeun1": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 3,
+      "p_typo": 0,
+      "i_enhancement": 3,
+      "i_bug": 0,
+      "i_documentation": 3
+    },
+    "jaewon786": {
+      "p_enhancement": 6,
+      "p_bug": 5,
+      "p_documentation": 2,
+      "p_typo": 2,
+      "i_enhancement": 9,
+      "i_bug": 3,
+      "i_documentation": 2
+    },
+    "moongyeong000": {
+      "p_enhancement": 3,
+      "p_bug": 1,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "sun-juu": {
+      "p_enhancement": 2,
+      "p_bug": 0,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 3,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "Jass2345": {
+      "p_enhancement": 6,
+      "p_bug": 5,
+      "p_documentation": 6,
+      "p_typo": 1,
+      "i_enhancement": 6,
+      "i_bug": 2,
+      "i_documentation": 4
+    },
+    "bym010312": {
+      "p_enhancement": 10,
+      "p_bug": 2,
+      "p_documentation": 6,
+      "p_typo": 0,
+      "i_enhancement": 4,
+      "i_bug": 4,
+      "i_documentation": 6
+    },
+    "lsc1124": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "kanggyuhyuk": {
+      "p_enhancement": 2,
+      "p_bug": 1,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 1,
+      "i_documentation": 2
+    },
+    "isDohyeon": {
+      "p_enhancement": 6,
+      "p_bug": 1,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 4,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "parkjueuny": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "jw21603": {
+      "p_enhancement": 1,
+      "p_bug": 1,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 2,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "how-to-song": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 1,
+      "i_documentation": 1
+    },
+    "eunwoooo": {
+      "p_enhancement": 2,
+      "p_bug": 0,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 3
+    },
+    "sanghoon03": {
+      "p_enhancement": 0,
+      "p_bug": 1,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 2
+    },
+    "Jae-Hyuk-Lee": {
+      "p_enhancement": 4,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 9,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "xhltkwk": {
+      "p_enhancement": 3,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 2,
+      "i_bug": 0,
+      "i_documentation": 2
+    },
+    "kjason0102": {
+      "p_enhancement": 10,
+      "p_bug": 1,
+      "p_documentation": 4,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 5,
+      "i_documentation": 2
+    },
+    "sangmyoung0": {
+      "p_enhancement": 2,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "KohSeungJae": {
+      "p_enhancement": 1,
+      "p_bug": 1,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 4,
+      "i_bug": 1,
+      "i_documentation": 2
+    },
+    "INHYOYUN": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "hyunsang1021": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "dbrhr5": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 2,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "ohhyeonghwan": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 2,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "taegeon1ee": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 1,
+      "i_documentation": 1
+    },
+    "yougyeongsu": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "seokwd": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "lpoipk": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "SongHyunWoo123": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "seojunyong00": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "AnhyunJun1741": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "cchhap": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "lad-blip": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "seongmin1538": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "eunoa": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "cmin03": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "jhs1077": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "pogaem": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "lavee1023": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "hansangik2": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "jungdongu": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "uzihyun": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "StaySober01": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "grapefruit2589": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "joon0447": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "Enzjo": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "MyeongHyeonCheol": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "LIMGEUNHYEONG": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "keveu": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "jung0148": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "Sinhyungju": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "syl0073": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "sungh00": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "godolll": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "yoohyeonahh": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "JangNayoungg": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "lxyul": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "sieunkirn": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    }
+  }
+}

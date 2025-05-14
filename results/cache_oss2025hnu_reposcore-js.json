@@ -1,0 +1,302 @@
+{
+  "update_time": 1747197735,
+  "participants": {
+    "eunwoooo": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "sungh00": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 1,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 6
+    },
+    "Bluewak": {
+      "p_enhancement": 10,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 5,
+      "i_bug": 1,
+      "i_documentation": 1
+    },
+    "hyn033": {
+      "p_enhancement": 3,
+      "p_bug": 2,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 2,
+      "i_bug": 2,
+      "i_documentation": 0
+    },
+    "jinho131": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 5,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "MING9UCCI": {
+      "p_enhancement": 4,
+      "p_bug": 1,
+      "p_documentation": 3,
+      "p_typo": 0,
+      "i_enhancement": 5,
+      "i_bug": 2,
+      "i_documentation": 0
+    },
+    "jungsuryeon": {
+      "p_enhancement": 2,
+      "p_bug": 0,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 3,
+      "i_bug": 0,
+      "i_documentation": 2
+    },
+    "Sernn0": {
+      "p_enhancement": 3,
+      "p_bug": 2,
+      "p_documentation": 5,
+      "p_typo": 0,
+      "i_enhancement": 3,
+      "i_bug": 2,
+      "i_documentation": 2
+    },
+    "jaewon786": {
+      "p_enhancement": 4,
+      "p_bug": 0,
+      "p_documentation": 3,
+      "p_typo": 3,
+      "i_enhancement": 3,
+      "i_bug": 3,
+      "i_documentation": 1
+    },
+    "seoyoomi": {
+      "p_enhancement": 2,
+      "p_bug": 0,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 8,
+      "i_bug": 0,
+      "i_documentation": 4
+    },
+    "porvs": {
+      "p_enhancement": 0,
+      "p_bug": 1,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 3,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "moongyeong000": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "Jass2345": {
+      "p_enhancement": 10,
+      "p_bug": 3,
+      "p_documentation": 4,
+      "p_typo": 0,
+      "i_enhancement": 2,
+      "i_bug": 3,
+      "i_documentation": 4
+    },
+    "bym010312": {
+      "p_enhancement": 3,
+      "p_bug": 0,
+      "p_documentation": 5,
+      "p_typo": 1,
+      "i_enhancement": 4,
+      "i_bug": 2,
+      "i_documentation": 2
+    },
+    "joon0447": {
+      "p_enhancement": 16,
+      "p_bug": 3,
+      "p_documentation": 2,
+      "p_typo": 1,
+      "i_enhancement": 19,
+      "i_bug": 4,
+      "i_documentation": 6
+    },
+    "how-to-song": {
+      "p_enhancement": 2,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "Jae-Hyuk-Lee": {
+      "p_enhancement": 9,
+      "p_bug": 1,
+      "p_documentation": 2,
+      "p_typo": 0,
+      "i_enhancement": 18,
+      "i_bug": 2,
+      "i_documentation": 3
+    },
+    "isDohyeon": {
+      "p_enhancement": 7,
+      "p_bug": 2,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 2,
+      "i_bug": 2,
+      "i_documentation": 2
+    },
+    "sanghoon03": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "SongHyunWoo123": {
+      "p_enhancement": 0,
+      "p_bug": 1,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "JosephStalin0305": {
+      "p_enhancement": 4,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 7,
+      "i_bug": 2,
+      "i_documentation": 4
+    },
+    "KohSeungJae": {
+      "p_enhancement": 6,
+      "p_bug": 2,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 7,
+      "i_bug": 2,
+      "i_documentation": 1
+    },
+    "MyeongHyeonCheol": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 2,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "StaySober01": {
+      "p_enhancement": 2,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "weeksun02": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 3
+    },
+    "kjason0102": {
+      "p_enhancement": 4,
+      "p_bug": 2,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 1,
+      "i_documentation": 2
+    },
+    "sangmyoung0": {
+      "p_enhancement": 3,
+      "p_bug": 1,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 4,
+      "i_bug": 1,
+      "i_documentation": 0
+    },
+    "jeonggeun1": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "taegeon1ee": {
+      "p_enhancement": 1,
+      "p_bug": 1,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "hyunsang1021": {
+      "p_enhancement": 2,
+      "p_bug": 1,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 2,
+      "i_documentation": 2
+    },
+    "jw21603": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "seojunyong00": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "sun-juu": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 0
+    }
+  }
+}

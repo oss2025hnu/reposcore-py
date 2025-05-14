@@ -1,0 +1,230 @@
+{
+  "update_time": 1747196185,
+  "participants": {
+    "eunwoooo": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 3
+    },
+    "parkjueuny": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 3,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "MyeongHyeonCheol": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 1,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 4
+    },
+    "taegeon1ee": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "sungh00": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 2,
+      "p_typo": 2,
+      "i_enhancement": 3,
+      "i_bug": 0,
+      "i_documentation": 6
+    },
+    "smallisl": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "jinho131": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "jungsuryeon": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "dbrhr5": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 2,
+      "i_documentation": 0
+    },
+    "sieunkirn": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 3,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "moongyeong000": {
+      "p_enhancement": 3,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "seoyoomi": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 1,
+      "i_enhancement": 2,
+      "i_bug": 0,
+      "i_documentation": 2
+    },
+    "lad-blip": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "syl0073": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "speedmult": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 3,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "AnhyunJun1741": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 1,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "SongHyunWoo123": {
+      "p_enhancement": 1,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "kanggyuhyuk": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 2
+    },
+    "sanghoon03": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 1
+    },
+    "how-to-song": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 2
+    },
+    "uzihyun": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 1,
+      "p_typo": 0,
+      "i_enhancement": 2,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "INHYOYUN": {
+      "p_enhancement": 0,
+      "p_bug": 1,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 0
+    },
+    "lxyul": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 1,
+      "i_documentation": 0
+    },
+    "lsc1124": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 0,
+      "i_bug": 0,
+      "i_documentation": 5
+    },
+    "isDohyeon": {
+      "p_enhancement": 0,
+      "p_bug": 0,
+      "p_documentation": 0,
+      "p_typo": 0,
+      "i_enhancement": 1,
+      "i_bug": 0,
+      "i_documentation": 0
+    }
+  }
+}
