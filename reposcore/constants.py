@@ -1,3 +1,4 @@
+
 # 포맷 상수
 FORMAT_TABLE = "table"
 FORMAT_TEXT = "text"
