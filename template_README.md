@@ -24,6 +24,13 @@ make requirements
 ```
 {{ usage }}
 ```
+## Clean results directory
+
+`make clean` 명령어는 분석 결과가 저장된 `results` 디렉토리를 삭제하는 기능을 제공합니다. 이 명령어를 사용하여 저장된 분석 결과를 초기화할 수 있습니다. 
+
+```
+make clean
+```
 
 ### 단일 저장소 분석
 

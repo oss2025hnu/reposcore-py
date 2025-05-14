@@ -22,6 +22,7 @@ make requirements
 **⚠️ 반드시 저장소 최상위 디렉토리에서 실행해야 합니다. (python -m reposcore 명령은 상대 경로 기준으로 동작합니다.)**
 
 ```
+[2025-05-12 14:36:21] [INFO] generated new fontManager
 usage: python -m reposcore [-h] [-v] [owner/repo ...] [--output dir_name] [--format {table, text, chart, all}] [--check-limit] [--user-info path]
 
 오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구
@@ -46,6 +47,13 @@ options:
   --user username       특정 사용자의 점수와 등수를 출력합니다 (GitHub 사용자명)
   --theme {default,dark}, -t {default,dark}
                         테마 선택 (default 또는 dark)
+```
+## Clean results directory
+
+`make clean` 명령어는 분석 결과가 저장된 `results` 디렉토리를 삭제하는 기능을 제공합니다. 이 명령어를 사용하여 저장된 분석 결과를 초기화할 수 있습니다. 
+
+```
+make clean
 ```
 
 ### 단일 저장소 분석

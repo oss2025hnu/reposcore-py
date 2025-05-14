@@ -3,6 +3,7 @@ import json
 import requests
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
+from collections import defaultdict
 
 from .common_utils import log, is_verbose
 from .github_utils import *
@@ -67,6 +68,9 @@ class RepoAnalyzer:
 
         self.repo_path = repo_path
         self.participants: dict[str, dict[str, int]] = {}
+        self.weekly_activity = defaultdict(lambda: {'pr': 0, 'issue': 0})
+        self.semester_start_date = None
+
         self.score = self.SCORE_WEIGHTS.copy()
 
         self.theme_manager = ThemeManager()  # 테마 매니저 초기화
@@ -151,6 +155,14 @@ class RepoAnalyzer:
                     return
 
                 server_create_datetime = datetime.fromisoformat(item['created_at'])
+
+                if self.semester_start_date:
+                    created_date = server_create_datetime.astimezone(ZoneInfo("Asia/Seoul")).date()
+                    week_index = (created_date - self.semester_start_date).days // 7 + 1
+                    if 'pull_request' in item and item.get('pull_request', {}).get('merged_at'):
+                        self.weekly_activity[week_index]['pr'] += 1
+                    elif item.get('state_reason') in ('completed', 'reopened', None):
+                        self.weekly_activity[week_index]['issue'] += 1
 
                 self.__previous_create_at = server_create_datetime if self.__previous_create_at is None else max(self.__previous_create_at,server_create_datetime)
 
@@ -305,6 +317,10 @@ class RepoAnalyzer:
             scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
 
         return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
+    
+    def set_semester_start_date(self, date: datetime.date) -> None:
+        """--semester-start 옵션에서 받은 학기 시작일 저장"""
+        self.semester_start_date = date
 
     def calculate_averages(self, scores: dict[str, dict[str, float]]) -> dict[str, float]:
         """점수 딕셔너리에서 각 카테고리별 평균을 계산합니다."""
