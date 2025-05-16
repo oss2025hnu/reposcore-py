@@ -1,9 +1,9 @@
+from .retry_decorator import retry
 import re
 import sys
 import time
 import requests
 import logging
-from .retry_decorator import retry
 
 def validate_repo_format(repo: str) -> bool:
     pattern = r'^[\w\-]+/[\w\-]+$'
