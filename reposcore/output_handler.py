@@ -63,6 +63,21 @@ class OutputHandler:
                 return grade
         return 'F'
     
+
+    def _summarize_scores(self, scores: dict[str, dict[str, float]]) -> tuple[float, float, float]:
+        """점수 딕셔너리에서 평균, 최고점, 최저점을 계산해서 반환"""
+        total_scores = [score["total"] for score in scores.values()]
+        
+        if not total_scores:
+            return 0.0, 0.0, 0.0  # 점수가 없는 경우 방어 처리
+
+        avg_score = sum(total_scores) / len(total_scores)
+        max_score = max(total_scores)
+        min_score = min(total_scores)
+
+        return avg_score, max_score, min_score
+
+
     @staticmethod
     def get_kst_timestamp() -> str:
         """현재 KST(한국 시간) 기준 타임스탬프 반환"""
@@ -89,9 +104,16 @@ class OutputHandler:
                 f"{score['document issue']:.1f}"
             ]
             table.add_row(row)
+
+        # 평균, 최고점, 최저점
+        avg_score, max_score, min_score = self._summarize_scores(scores)
         
         with open(save_path, 'w', encoding='utf-8') as f:
             f.write(f"=== 참여자별 점수 (분석 기준 시각: {timestamp}) ===\n\n")
+            f.write("[요약 통계]\n")
+            f.write(f"- 평균 점수: {avg_score:.1f}\n")
+            f.write(f"- 최고 점수: {max_score:.1f}\n")
+            f.write(f"- 최저 점수: {min_score:.1f}\n\n")
             f.write(str(table))
 
     def generate_count_csv(self, scores: dict, save_path: str = None) -> None:
@@ -130,9 +152,16 @@ class OutputHandler:
                 f"{score['feat/bug issue']:5.1f}",
                 f"{score['document issue']:5.1f}",
             ])
+        
+        # 평균, 최고점, 최저점
+        avg_score, max_score, min_score = self._summarize_scores(scores)
 
         with open(save_path, 'w', encoding='utf-8') as f:
             f.write(f"=== 참여자별 점수 (분석 기준 시각: {timestamp}) ===\n\n")
+            f.write("[요약 통계]\n")
+            f.write(f"- 평균 점수: {avg_score:.1f}\n")
+            f.write(f"- 최고 점수: {max_score:.1f}\n")
+            f.write(f"- 최저 점수: {min_score:.1f}\n\n")
             f.write(table.get_string())
 
 
@@ -228,6 +257,9 @@ class OutputHandler:
             else:
                 ax.text(total + 1, i, f'{total:.1f}', 
                     va='center', fontsize=self.CHART_CONFIG['font_size'])
+                
+        # 평균, 최고점, 최저점
+        avg_score, max_score, min_score = self._summarize_scores(scores)
 
         # 축 설정
         ax.set_yticks(range(len(ranked_participants)))
@@ -237,6 +269,16 @@ class OutputHandler:
             f'Repository Contribution Scores\n(분석 기준 시각: {timestamp})',
             fontsize=14,
             loc='center',  # 또는 'left', 'right'
+            color='black'
+        )
+        ax.text(
+            1.0,
+            1.0,
+            f"avg_score: {avg_score:.1f} / max_score: {max_score:.1f} / min_score: {min_score:.1f}",
+            transform=ax.transAxes,
+            ha='right',
+            va='top',
+            fontsize=10,
             color='black'
         )
         ax.invert_yaxis()
