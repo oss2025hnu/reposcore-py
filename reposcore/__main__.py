@@ -154,7 +154,7 @@ def handle_individual_user_mode(args):
     else:
         print(f"[INFO] 사용자 '{args.user}'의 점수를 찾을 수 없습니다.")
 
-if args.user:                        
+if args.user and len(args.repository) == 1:
     handle_individual_user_mode(args)
     sys.exit(0)
 
@@ -245,8 +245,15 @@ def main() -> None:
     all_repo_scores = {}
     
     #저장소별로 분석 후 '개별 결과'도 저장하기
-    for repo in final_repositories:
-        log(f"분석 시작: {repo}", force=True)
+    try:
+        from tqdm import tqdm
+    except ImportError:
+        print("[오류] tqdm 라이브러리가 설치되어 있지 않습니다.")
+        print("다음 명령어로 설치 후 다시 실행하세요:")
+        print("pip install tqdm")
+        exit(1)
+
+    for repo in tqdm(final_repositories, desc="저장소 분석 진행"):
 
         analyzer = RepoAnalyzer(repo, token=github_token, theme=args.theme)
         output_handler = OutputHandler(theme=args.theme)
@@ -277,9 +284,11 @@ def main() -> None:
                 analyzer.previous_create_at = cached_json['update_time']
         else:
             if args.use_cache and cache_update_required:
-                log(f"🔄 리포지토리의 최근 이슈 생성 시간이 캐시파일의 생성 시간보다 최근입니다. GitHub API로 데이터를 수집합니다.", force=True)
+                if args.verbose:
+                    log(f"🔄 리포지토리의 최근 이슈 생성 시간이 캐시파일의 생성 시간보다 최근입니다. GitHub API로 데이터를 수집합니다.", force=True)
             else:
-                log(f"�� 캐시를 사용하지 않거나 캐시 파일({cache_file_name})이 없습니다. GitHub API로 데이터를 수집합니다.", force=True)
+                if args.verbose:
+                    log(f"�� 캐시를 사용하지 않거나 캐시 파일({cache_file_name})이 없습니다. GitHub API로 데이터를 수집합니다.", force=True)
             analyzer.collect_PRs_and_issues()
             if not getattr(analyzer, "_data_collected", True):
                 logging.error("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 종료합니다.")
@@ -298,14 +307,14 @@ def main() -> None:
 
             # --user 옵션이 지정된 경우 사용자 점수 및 등수 출력
             user_lookup_name = user_info.get(args.user, args.user) if args.user and user_info else args.user
-            if args.user and user_lookup_name in repo_scores:
+            if args.user and len(final_repositories) == 1 and user_lookup_name in repo_scores:
                 sorted_users = list(repo_scores.keys())
                 user_rank = sorted_users.index(user_lookup_name) + 1
                 user_score = repo_scores[user_lookup_name]["total"]
                 log(f"[INFO] 사용자: {user_lookup_name}", force=True)
                 log(f"[INFO] 총점: {user_score:.2f}점", force=True)
                 log(f"[INFO] 등수: {user_rank}등 (전체 {len(sorted_users)}명 중)", force=True)
-            elif args.user:
+            elif args.user and len(final_repositories) == 1:
                 log(f"[INFO] 사용자 '{args.user}'의 점수가 계산된 결과에 없습니다.", force=True)
 
             # 출력 형식
@@ -319,25 +328,36 @@ def main() -> None:
             os.makedirs(repo_output_dir, exist_ok=True)
             all_repo_scores[repo_safe_name] = repo_scores
 
+            results_saved = []
+
             # 1) CSV 테이블 저장
             if FORMAT_TABLE in formats:
                 table_path = os.path.join(repo_output_dir, "score.csv")
                 output_handler.generate_table(repo_scores, save_path=table_path)
                 output_handler.generate_count_csv(repo_scores, save_path=table_path)
-                log(f"CSV 파일 저장 완료: {table_path}", force=True)
+                if args.verbose:
+                    log(f"CSV 파일 저장 완료: {table_path}", force=True)
+                results_saved.append("CSV")
 
             # 2) 텍스트 테이블 저장
             if FORMAT_TEXT in formats:
                 txt_path = os.path.join(repo_output_dir, "score.txt")
                 output_handler.generate_text(repo_scores, txt_path)
-                log(f"텍스트 파일 저장 완료: {txt_path}", force=True)
+                if args.verbose:
+                    log(f"텍스트 파일 저장 완료: {txt_path}", force=True)
+                results_saved.append("TXT")
 
             # 3) 차트 이미지 저장
             if FORMAT_CHART in formats:
                 chart_filename = "chart_grade.png" if args.grade else "chart.png"
                 chart_path = os.path.join(repo_output_dir, chart_filename)
                 output_handler.generate_chart(repo_scores, save_path=chart_path, show_grade=args.grade)
-                log(f"차트 이미지 저장 완료: {chart_path}", force=True)
+                if args.verbose:
+                    log(f"차트 이미지 저장 완료: {chart_path}", force=True)
+                results_saved.append("Chart")
+
+            # 최종 통합 로그 출력
+            log(f"{repo} 분석 결과({', '.join(results_saved)}) 저장 완료: {repo_output_dir}", force=True)    
 
             # 주차별 활동 차트생성
             if args.weekly_chart:
@@ -388,42 +408,41 @@ def main() -> None:
         
         # 통합 점수 계산
         overall_scores = overall_analyzer.calculate_scores(user_info)
-
-        # --user 옵션이 지정된 경우 통합 점수에서 출력
-        user_lookup_name = user_info.get(args.user, args.user) if args.user and user_info else args.user
-        if args.user and user_lookup_name in overall_scores:
-            sorted_users = list(overall_scores.keys())
-            user_rank = sorted_users.index(user_lookup_name) + 1
-            user_score = overall_scores[user_lookup_name]["total"]
-            log(f"[INFO] 사용자: {user_lookup_name}", force=True)
-            log(f"[INFO] 총점: {user_score:.2f}점", force=True)
-            log(f"[INFO] 등수: {user_rank}등 (전체 {len(sorted_users)}명 중)", force=True)
-        elif args.user:
-            log(f"[INFO] 사용자 '{args.user}'의 점수가 통합 분석 결과에 없습니다.", force=True)
         
         # 통합 결과 저장
         overall_output_dir = os.path.join(args.output, "overall")
         os.makedirs(overall_output_dir, exist_ok=True)
+
+        results_saved = []
         
         # 1) CSV 테이블 저장
         if FORMAT_TABLE in formats:
             table_path = os.path.join(overall_output_dir, "score.csv")
             output_handler.generate_table(overall_scores, save_path=table_path)
             output_handler.generate_count_csv(overall_scores, save_path=table_path)
-            log(f"[통합 저장소] CSV 파일 저장 완료: {table_path}", force=True)
-        
+            if args.verbose:
+                log(f"[통합 저장소] CSV 파일 저장 완료: {table_path}", force=True)
+            results_saved.append("CSV")
+
         # 2) 텍스트 테이블 저장
         if FORMAT_TEXT in formats:
             txt_path = os.path.join(overall_output_dir, "score.txt")
             output_handler.generate_text(overall_scores, txt_path)
-            log(f"[통합 저장소] 텍스트 파일 저장 완료: {txt_path}", force=True)
+            if args.verbose:
+                log(f"[통합 저장소] 텍스트 파일 저장 완료: {txt_path}", force=True)
+            results_saved.append("TXT")
         
         # 3) 차트 이미지 저장
         if FORMAT_CHART in formats:
             chart_filename = "chart_grade.png" if args.grade else "chart.png"
             chart_path = os.path.join(overall_output_dir, chart_filename)
             output_handler.generate_chart(overall_scores, save_path=chart_path, show_grade=args.grade)
-            log(f"[통합 저장소] 차트 이미지 저장 완료: {chart_path}", force=True)
+            if args.verbose:
+                log(f"[통합 저장소] 차트 이미지 저장 완료: {chart_path}", force=True)
+            results_saved.append("Chart")
+
+        # 최종 통합 로그
+        log(f"[통합 저장소] 분석 결과({', '.join(results_saved)}) 저장 완료: {overall_output_dir}", force=True)
 
     # 사용자별 저장소별 점수 CSV 만드는 함수
     def generate_overall_repository_csv(all_repo_scores, output_path):
@@ -457,9 +476,13 @@ def main() -> None:
         overall_repo_dir = os.path.join(args.output, "overall_repository")
         os.makedirs(overall_repo_dir, exist_ok=True)
 
+        results_saved = []
+
         overall_csv_path = os.path.join(overall_repo_dir, "overall_scores.csv")
         generate_overall_repository_csv(all_repo_scores, overall_csv_path)
-        log(f"[📊 overall_repository] 저장소별 사용자 점수 CSV 저장 완료: {overall_csv_path}", force=True)
+        if args.verbose:
+            log(f"[📊 overall_repository] 저장소별 사용자 점수 CSV 저장 완료: {overall_csv_path}", force=True)
+        results_saved.append("CSV")
 
         # 🔽 텍스트 파일 저장: overall_scores.txt
         overall_txt_path = os.path.join(overall_repo_dir, "overall_scores.txt")
@@ -486,12 +509,33 @@ def main() -> None:
                     if repo_key in score_dict:
                         f.write(f"{repo_key}: {score_dict[repo_key]}점\n")
                 f.write("\n")  # 사용자별 공백 줄
-        log(f"[📊 overall_repository] 저장소별 사용자 점수 TXT 저장 완료: {overall_txt_path}", force=True)
+        if args.verbose:
+            log(f"[📊 overall_repository] 저장소별 사용자 점수 TXT 저장 완료: {overall_txt_path}", force=True)
+        results_saved.append("TXT")
 
         # 📈 통합 차트 이미지 저장
         chart_path = os.path.join(overall_repo_dir, "chart.png")
         output_handler.generate_repository_stacked_chart(user_scores, save_path=chart_path)
-        log(f"[📊 overall_repository] 누적 기여도 차트 저장 완료: {chart_path}", force=True)
+        if args.verbose:
+            log(f"[📊 overall_repository] 누적 기여도 차트 저장 완료: {chart_path}", force=True)
+        results_saved.append("Chart")
+
+        log(f"[📊 overall_repository] 분석 결과({', '.join(results_saved)}) 저장 완료: {overall_repo_dir}", force=True)
+        log(f"[📊 overall_repository] 통합 저장소 기준 사용자별 기여도는 '{overall_repo_dir}' 폴더 내 결과 파일에서 확인할 수 있습니다.", force=True)
+
+        # --user 옵션이 지정된 경우 통합 점수에서 출력
+        user_lookup_name = user_info.get(args.user, args.user) if args.user and user_info else args.user
+        if args.user and user_lookup_name in overall_scores:
+            sorted_users = list(overall_scores.keys())
+            user_rank = sorted_users.index(user_lookup_name) + 1
+            user_score = overall_scores[user_lookup_name]["total"]
+            print()
+            log(f"[INFO] 사용자: {user_lookup_name}", force=True)
+            log(f"[INFO] 총점: {user_score:.2f}점", force=True)
+            log(f"[INFO] 등수: {user_rank}등 (전체 {len(sorted_users)}명 중)", force=True)
+            print()
+        elif args.user:
+            log(f"[INFO] 사용자 '{args.user}'의 점수가 통합 분석 결과에 없습니다.", force=True)
 
 if __name__ == "__main__":
     main()

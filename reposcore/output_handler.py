@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import json
+import logging
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
+
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -109,22 +112,23 @@ class OutputHandler:
 
         table = PrettyTable()
         table.field_names = [
-            "Name", "Total Score", "Grade",
+            "Rank","Name", "Total Score", "Grade",
             "PR (Feature/Bug)", "PR (Docs)", "PR (Typos)",
             "Issue (Feature/Bug)", "Issue (Docs)"
         ]
 
-        for name, score in scores.items():
+        for rank, (name, score) in enumerate(scores.items(), start=1):
             grade = self._calculate_grade(score["total"])
             table.add_row([
+                f"{rank}",
                 name,
-                f"{score['total']:.1f}",
+                f"{score['total']:5.1f}",
                 grade,
-                f"{score['feat/bug PR']:.1f}",
-                f"{score['document PR']:.1f}",
-                f"{score['typo PR']:.1f}",
-                f"{score['feat/bug issue']:.1f}",
-                f"{score['document issue']:.1f}",
+                f"{score['feat/bug PR']:5.1f}",
+                f"{score['document PR']:5.1f}",
+                f"{score['typo PR']:5.1f}",
+                f"{score['feat/bug issue']:5.1f}",
+                f"{score['document issue']:5.1f}",
             ])
 
         with open(save_path, 'w', encoding='utf-8') as f:

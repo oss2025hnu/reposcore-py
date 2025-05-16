@@ -22,7 +22,6 @@ make requirements
 **⚠️ 반드시 저장소 최상위 디렉토리에서 실행해야 합니다. (python -m reposcore 명령은 상대 경로 기준으로 동작합니다.)**
 
 ```
-[2025-05-12 14:36:21] [INFO] generated new fontManager
 usage: python -m reposcore [-h] [-v] [owner/repo ...] [--output dir_name] [--format {table, text, chart, all}] [--check-limit] [--user-info path]
 
 오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구
@@ -47,6 +46,9 @@ options:
   --user username       특정 사용자의 점수와 등수를 출력합니다 (GitHub 사용자명)
   --theme {default,dark}, -t {default,dark}
                         테마 선택 (default 또는 dark)
+  --weekly-chart        주차별 PR/이슈 활동량 차트를 생성합니다.
+  --semester-start SEMESTER_START
+                        학기 시작일 (형식: YYYY-MM-DD, 예: 2025-03-04)
 ```
 ## Clean results directory
 
@@ -85,6 +87,15 @@ python -m reposcore oss2025hnu/reposcore-py oss2025hnu/reposcore-js oss2025hnu/r
   - `score.csv`: 전체 통합 기여자 점수 테이블
   - `score.txt`: 전체 기여자 점수 요약 텍스트
   - `chart.png`: 통합 기여도 시각화 차트
+  
+---
+
+### 학기 시작일 기준 주차별 활동량 시각화
+학기 시작일을 기준으로 커밋, PR, 이슈 등의 주차별 활동량 변화를 시각화하는 결과를 생성합니다.
+```bash
+python -m reposcore <소유자/저장소> --semester-start YYYY-MM-DD --weekly-chart
+```
+
 
 ## Score Formula
 아래는 PR 개수와 이슈 개수의 비율에 따라 점수로 인정가능한 최대 개수를 구하고 각 배점에 따라 최종 점수를 산출하는 공식이다.
@@ -136,12 +147,16 @@ $S = 3P_{fb}^* + 2P_d^* + 1P_t^* + 2I_{fb}^* + 1I_d^*$
   - README 자동화 방법.
 - [Pylint 사용 가이드](docs/pylint.md)
   - Pylint를 사용한 검사 기능 사용 방법.
+- [의존성 관리 가이드](docs/dependency_guide.md)
+  - requirements.txt 파일을 통한 라이브러리 관리 및 설치 방법.
 
 ### 🔗 GitHub 관련 기능
 - [GitHub API 가이드](docs/github_api_guide.md)
   - GitHub API 사용 방법.
 - [토큰 생성 방법](docs/github-token-guide.md)
   - GitHub 토큰 생성 및 설정.
+- [cherry-pick 이용 가이드](docs/cherry-pick_guide.md)
+  - cherry-pick 사용방법.
 
 ### 🧪 테스트 및 개발
 - [테스트 가이드](docs/test-guide.md)

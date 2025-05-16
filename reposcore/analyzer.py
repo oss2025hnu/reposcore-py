@@ -355,7 +355,7 @@ class RepoAnalyzer:
         try:
             with open(cache_path, 'r', encoding='utf-8') as f:
                 cache_data = json.load(f)
-                cached_timestamp = cache_data.get('timestamp', 0)
+                cached_timestamp = cache_data.get('update_time', 0)
                 current_timestamp = int(datetime.now(timezone.utc).timestamp())
                 return current_timestamp - cached_timestamp > 3600  # 1시간
         except (json.JSONDecodeError, KeyError):
