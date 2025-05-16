@@ -306,6 +306,19 @@ class OutputHandler:
             plt.barh(usernames, scores_by_repo[repo], left=bottom, label=repo.upper(), color=color)
             bottom = [b + s for b, s in zip(bottom, scores_by_repo[repo])]
 
+        # 막대 옆에 총점 수치 표시
+        for i, user in enumerate(usernames):
+            total_score = sum(scores[user].get(repo, 0) for repo in repo_keys)
+            plt.text(
+                bottom[i] + 1,  # 막대 끝에서 오른쪽으로 1만큼 띄움
+                i,              # y 좌표 (사용자 위치)
+                f"{total_score:.1f}",  # 소수점 1자리로 점수 표시
+                va='center',
+                fontsize=9,
+                color='black'
+            )
+
+
         plt.xlabel("점수")
         plt.title("사용자별 저장소 기여도 (py/js/cs)")
         plt.legend(loc="upper right")
