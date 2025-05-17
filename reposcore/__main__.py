@@ -491,30 +491,32 @@ def main() -> None:
         results_saved.append("CSV")
 
         # 🔽 텍스트 파일 저장: overall_scores.txt
+        from prettytable import PrettyTable
+
         overall_txt_path = os.path.join(overall_repo_dir, "overall_scores.txt")
+        table = PrettyTable()
+        table.field_names = ["Rank", "Name"] + [repo.replace("/", "_") for repo in final_repositories] + ["Total"]
+
+        user_scores = defaultdict(dict)
+        for repo_name, repo_scores in all_repo_scores.items():
+            for username, score_dict in repo_scores.items():
+                user_scores[username][repo_name] = score_dict["total"]
+
+        for username in user_scores:
+            user_scores[username]["total"] = sum(user_scores[username].values())
+
+        sorted_users = sorted(user_scores.items(), key=lambda x: x[1]["total"], reverse=True)
+
+        for rank, (username, score_dict) in enumerate(sorted_users, start=1):
+            row = [rank, username]
+            for repo in final_repositories:
+                repo_key = repo.replace("/", "_")
+                row.append(score_dict.get(repo_key, 0))
+            row.append(score_dict["total"])
+            table.add_row(row)
+
         with open(overall_txt_path, "w", encoding="utf-8") as f:
-            sorted_users = sorted(all_repo_scores.keys())
-            
-            # 사용자 점수 재구성 (user_scores: username → repo별 점수)
-            user_scores = defaultdict(dict)
-            for repo_name, repo_scores in all_repo_scores.items():
-                for username, score_dict in repo_scores.items():
-                    user_scores[username][repo_name] = score_dict["total"]
-
-            # 총점 계산 후 정렬
-            for username in user_scores:
-                user_scores[username]["total"] = sum(user_scores[username].values())
-
-            sorted_users = sorted(user_scores.items(), key=lambda x: x[1]["total"], reverse=True)
-
-            for username, score_dict in sorted_users:
-                f.write(f"📊 {username}\n")
-                f.write(f"총점: {score_dict['total']}점\n")
-                for repo in final_repositories:
-                    repo_key = repo.replace("/", "_")
-                    if repo_key in score_dict:
-                        f.write(f"{repo_key}: {score_dict[repo_key]}점\n")
-                f.write("\n")  # 사용자별 공백 줄
+            f.write(table.get_string())
         if args.verbose:
             log(f"[📊 overall_repository] 저장소별 사용자 점수 TXT 저장 완료: {overall_txt_path}", force=True)
         results_saved.append("TXT")
