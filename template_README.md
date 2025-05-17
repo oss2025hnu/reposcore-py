@@ -70,6 +70,15 @@ python -m reposcore oss2025hnu/reposcore-py oss2025hnu/reposcore-js oss2025hnu/r
 python -m reposcore <소유자/저장소> --semester-start YYYY-MM-DD --weekly-chart
 ```
 
+### py저장소 메인 모듈의 의미와 역할
+해당 프로젝트의 핵심 기능이 구현되어 있는 중심적인 파일입니다.
+일반적으로 __main__.py 이나 저장소 이름과 같은 파일로 구성되며, 프로그램을 실행할때 전체 흐름을 제어하는 중심 모듈 역할을 합니다.
+이 모듈은 다음 역할을 수행합니다:
+ - 애플리케이션 진입점 제공
+
+ - 주요 기능과 모듈 연결 및 실행
+
+ - 초기 설정 및 환경 초기화 작업 수행
 
 ## Score Formula
 아래는 PR 개수와 이슈 개수의 비율에 따라 점수로 인정가능한 최대 개수를 구하고 각 배점에 따라 최종 점수를 산출하는 공식이다.
