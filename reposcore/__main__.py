@@ -20,9 +20,10 @@ from . import common_utils
 FORMAT_TABLE = "table"
 FORMAT_TEXT = "text"
 FORMAT_CHART = "chart"
+FORMAT_HTML = "html"
 FORMAT_ALL = "all"
 
-VALID_FORMATS = [FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART, FORMAT_ALL]
+VALID_FORMATS = [FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART, FORMAT_HTML, FORMAT_ALL]
 VALID_FORMATS_DISPLAY = ", ".join(VALID_FORMATS)
 
 # 친절한 오류 메시지를 출력할 ArgumentParser 클래스
@@ -249,7 +250,8 @@ def main() -> None:
 
     overall_participants = {}
     all_repo_scores = {}
-    
+    all_repo_html_data = {}  # HTML 보고서 생성을 위한 데이터 저장
+
     #저장소별로 분석 후 '개별 결과'도 저장하기
     try:
         from tqdm import tqdm
@@ -326,7 +328,7 @@ def main() -> None:
             # 출력 형식
             formats = set(args.format)
             if FORMAT_ALL in formats:
-                formats = {FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART}
+                formats = {FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART, FORMAT_HTML}
 
             # 저장소별 폴더 생성 (owner/repo -> owner_repo)
             repo_safe_name = repo.replace('/', '_')
@@ -362,8 +364,26 @@ def main() -> None:
                     log(f"차트 이미지 저장 완료: {chart_path}", force=True)
                 results_saved.append("Chart")
 
+            # HTML 보고서 생성을 위한 데이터 준비 (나중에 통합 HTML 생성을 위해)
+            if FORMAT_HTML in formats:
+                # 차트 이미지 경로 준비
+                chart_filename = "chart_grade.png" if args.grade else "chart.png"
+                chart_path = os.path.join(repo_output_dir, chart_filename)
+                
+                # 주간 차트 경로 준비
+                weekly_chart_path = os.path.join(repo_output_dir, "weekly_activity.png") if args.weekly_chart else ''
+                
+                # 저장소별 데이터 저장
+                all_repo_html_data[repo_safe_name] = {
+                    'scores': repo_scores,
+                    'chart_path': chart_path,
+                    'weekly_chart_path': weekly_chart_path if args.weekly_chart else ''
+                }
+
             # 최종 통합 로그 출력
             log(f"{repo} 분석 결과({', '.join(results_saved)}) 저장 완료: {repo_output_dir}", force=True)    
+            
+            # HTML 보고서는 모든 저장소 처리 후에 한 번만 생성할 예정이므로 여기서는 생성하지 않음
 
             # 주차별 활동 차트생성
             if args.weekly_chart:
@@ -384,7 +404,7 @@ def main() -> None:
             overall_weekly_activity = defaultdict(lambda: {"pr": 0, "issue": 0})
             for repo in final_repositories:
                 log(f"분석 시작: {repo}", force=True)
-                
+
                 analyzer = RepoAnalyzer(repo, token=github_token, theme=args.theme)
                 if args.weekly_chart:
                     analyzer.set_semester_start_date(semester_start_date)
@@ -399,7 +419,7 @@ def main() -> None:
                             week = int(week_str)
                             overall_weekly_activity[week]["pr"] += data.get("pr", 0)
                             overall_weekly_activity[week]["issue"] += data.get("issue", 0)
-            
+
             overall_output_dir = os.path.join(args.output, "overall")
             os.makedirs(overall_output_dir, exist_ok=True)
 
@@ -407,21 +427,39 @@ def main() -> None:
             output_handler.generate_weekly_chart(overall_weekly_activity, semester_start_date, weekly_chart_path)
 
         log("\n=== 전체 저장소 통합 분석 ===", force=True)
-        
+
         # 통합 분석을 위한 analyzer 생성
         overall_analyzer = RepoAnalyzer("multiple_repos", token=github_token, theme=args.theme)
         overall_analyzer.participants = overall_participants
-        
+
         # 통합 점수 계산
         overall_scores = overall_analyzer.calculate_scores(user_info)
-        
+
+        # 저장소별 사용자 점수 통합 데이터
+        user_scores = defaultdict(dict)
+        for repo_name, repo_scores in all_repo_scores.items():
+            for username, score_dict in repo_scores.items():
+                user_scores[username][repo_name] = score_dict["total"]
+        for username in user_scores:
+            user_scores[username]["total"] = sum(user_scores[username].values())
+
         # 통합 결과 저장
         overall_output_dir = os.path.join(args.output, "overall")
         os.makedirs(overall_output_dir, exist_ok=True)
 
+        # 결과를 HTML 데이터에 추가 (순서 수정)
+        if FORMAT_HTML in formats:
+            all_repo_html_data["overall"] = {
+                'scores': overall_scores,
+                'chart_path': os.path.join(overall_output_dir, "chart.png")
+            }
+            all_repo_html_data["overall_repository"] = {
+                'scores': user_scores,
+                'chart_path': os.path.join(overall_output_dir, "chart.png")
+            }
+
         results_saved = []
-        
-        # 1) CSV 테이블 저장
+        # CSV 저장
         if FORMAT_TABLE in formats:
             table_path = os.path.join(overall_output_dir, "score.csv")
             output_handler.generate_table(overall_scores, save_path=table_path)
@@ -430,15 +468,15 @@ def main() -> None:
                 log(f"[통합 저장소] CSV 파일 저장 완료: {table_path}", force=True)
             results_saved.append("CSV")
 
-        # 2) 텍스트 테이블 저장
+        # 텍스트 저장
         if FORMAT_TEXT in formats:
             txt_path = os.path.join(overall_output_dir, "score.txt")
             output_handler.generate_text(overall_scores, txt_path)
             if args.verbose:
                 log(f"[통합 저장소] 텍스트 파일 저장 완료: {txt_path}", force=True)
             results_saved.append("TXT")
-        
-        # 3) 차트 이미지 저장
+
+        # 차트 이미지 저장
         if FORMAT_CHART in formats:
             chart_filename = "chart_grade.png" if args.grade else "chart.png"
             chart_path = os.path.join(overall_output_dir, chart_filename)
@@ -447,8 +485,8 @@ def main() -> None:
                 log(f"[통합 저장소] 차트 이미지 저장 완료: {chart_path}", force=True)
             results_saved.append("Chart")
 
-        # 최종 통합 로그
         log(f"[통합 저장소] 분석 결과({', '.join(results_saved)}) 저장 완료: {overall_output_dir}", force=True)
+
 
     # 사용자별 저장소별 점수 CSV 만드는 함수
     def generate_overall_repository_csv(all_repo_scores, output_path):
@@ -544,6 +582,14 @@ def main() -> None:
             print()
         elif args.user:
             log(f"[INFO] 사용자 '{args.user}'의 점수가 통합 분석 결과에 없습니다.", force=True)
+    
+    # HTML 보고서 생성 (모든 저장소 처리 후 한 번만 실행)
+    if FORMAT_HTML in formats and all_repo_html_data:
+        log("HTML 보고서 생성 중...", force=True)
+        output_handler.generate_html_report(all_repo_html_data, args.output)
+        log("HTML 보고서 생성 완료", force=True)
+
+
 
 if __name__ == "__main__":
     main()
