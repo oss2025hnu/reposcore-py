@@ -391,3 +391,177 @@ class OutputHandler:
         plt.tight_layout()
         plt.savefig(save_path)
         plt.close()
+
+    def _get_chart_base64(self, chart_path: str) -> str:
+        """차트 이미지를 HTML에 삽입하기 위해 base64로 변환"""
+        import base64
+        with open(chart_path, 'rb') as img_file:
+            return base64.b64encode(img_file.read()).decode('utf-8')
+
+    def _generate_score_table_html(self, scores: dict, repo_name: str) -> str:
+        """점수 테이블 HTML 생성"""
+        # 총점 기준으로 사용자 정렬
+        sorted_users = sorted(scores.items(), key=lambda x: x[1].get('total', 0), reverse=True)
+        
+        html = f"""
+        <div class="table-responsive">
+            <h3>{repo_name} 참여자 점수</h3>
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>순위</th>
+                        <th>이름</th>
+                        <th>총점</th>
+                        <th>등급</th>
+                    </tr>
+                </thead>
+                <tbody>
+        """.format(repo_name=repo_name)
+        
+        for rank, (user, score_data) in enumerate(sorted_users, 1):
+            total_score = score_data.get('total', 0)
+            grade = self._calculate_grade(total_score)
+            html += f"""
+                    <tr>
+                        <td>{rank}</td>
+                        <td>{user}</td>
+                        <td>{total_score:.1f}</td>
+                        <td>{grade}</td>
+                    </tr>
+            """.format(rank=rank, user=user, total_score=total_score, grade=grade)
+        
+        html += """
+                </tbody>
+            </table>
+        </div>
+        """
+        return html
+
+    def generate_html_report(self, all_repo_data: dict, output_dir: str) -> str:
+        """
+        모든 저장소에 대한 단일 HTML 보고서 생성
+        """
+        import os
+        from datetime import datetime
+
+        # 출력 디렉토리 생성
+        os.makedirs(output_dir, exist_ok=True)
+
+        # HTML 파일 경로 (항상 index.html로 고정)
+        html_path = os.path.join(output_dir, "index.html")
+
+        # 탭 헤더와 콘텐츠 초기화
+        tabs_header = []
+        tabs_content = []
+
+        # 중복 추가 방지용 집합
+        added_tabs = set()
+
+        # 각 저장소별로 탭과 콘텐츠 생성
+        for i, (repo_name, repo_data) in enumerate(all_repo_data.items()):
+            if repo_name in added_tabs:
+                continue  # 중복 방지
+
+            scores = repo_data.get('scores', {})
+            chart_path = repo_data.get('chart_path', '')
+            weekly_chart_path = repo_data.get('weekly_chart_path', '')
+
+            # 상대 경로로 변환 (HTML에서의 경로)
+            rel_chart_path = os.path.join(repo_name, os.path.basename(chart_path)) if chart_path else ''
+            rel_weekly_chart_path = os.path.join(repo_name, os.path.basename(weekly_chart_path)) if weekly_chart_path else ''
+
+            # CSV 다운로드 버튼 추가
+            csv_path = f"{repo_name}/score.csv"
+            download_button = f"""
+            <div class="text-end mt-2 mb-3">
+                <a href="{csv_path}" download class="btn btn-outline-primary">Download Score CSV</a>
+            </div>
+            """
+
+            # 탭 활성화 상태 설정 (첫 번째 탭만 활성화)
+            active_class = "active" if not tabs_header else ""
+
+            # 탭 헤더 추가
+            tabs_header.append(f"""
+            <li class="nav-item">
+                <a class="nav-link {active_class}" id="tab-{repo_name}" data-bs-toggle="tab" href="#content-{repo_name}" role="tab">
+                    {repo_name.replace('_', ' ').title().lower()}
+                </a>
+            </li>
+            """)
+
+            # 차트 이미지 태그 생성
+            chart_img = f'<img src="{rel_chart_path}" class="img-fluid" alt="{repo_name} 차트">' if rel_chart_path else '<p>차트를 사용할 수 없습니다.</p>'
+
+            # 주간 차트 이미지 태그 생성 (있을 경우)
+            weekly_chart_section = ''
+            if rel_weekly_chart_path:
+                weekly_chart_section = f"""
+                <div class="mt-4">
+                    <h4>주간 활동량</h4>
+                    <img src="{rel_weekly_chart_path}" class="img-fluid" alt="{repo_name} 주간 활동량 차트">
+                </div>
+                """
+
+            # 점수 테이블 생성
+            score_table = self._generate_score_table_html(scores, repo_name)
+
+            # 탭 콘텐츠 추가
+            tabs_content.append(f"""
+            <div class="tab-pane fade show {active_class}" id="content-{repo_name}" role="tabpanel">
+                <div class="row">
+                    {download_button}
+                    <div class="col-lg-6">
+                        <h4>기여도 차트</h4>
+                        {chart_img}
+                        {weekly_chart_section}
+                    </div>
+                    <div class="col-lg-6">
+                        {score_table}
+                    </div>
+                </div>
+            </div>
+            """)
+
+            # 중복 추가 방지용으로 집합에 추가
+            added_tabs.add(repo_name)
+
+        # HTML 템플릿
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # HTML 생성
+        html = f"""
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>GitHub 저장소 분석 보고서</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body>
+            <div class="container">
+                <div class="report-header text-center">
+                    <h1>GitHub 저장소 분석 보고서</h1>
+                    <p class="text-muted">생성 일시: {timestamp}</p>
+                </div>
+                
+                <ul class="nav nav-tabs" id="repoTabs" role="tablist">
+                    {"".join(tabs_header)}
+                </ul>
+                
+                <div class="tab-content" id="repoTabsContent">
+                    {"".join(tabs_content)}
+                </div>
+            </div>
+            
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        </body>
+        </html>
+        """
+
+        # HTML 파일 저장
+        with open(html_path, 'w', encoding='utf-8') as f:
+            f.write(html)
+
+        return html_path
