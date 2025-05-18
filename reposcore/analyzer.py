@@ -300,6 +300,36 @@ class RepoAnalyzer:
             
             # 유효 카운트 계산
             p_valid, i_valid = self._calculate_valid_counts(p_fb, p_d, p_t, i_fb, i_d)
+
+            # ✅ PR 0개인데 이슈만 있는 경우 1:4 규칙 보정
+            if p_fb == 0 and i_fb + i_d > 0:
+                # PR은 없지만, 이슈를 위해 PR 1개 있다고 간주 (계산용)
+                p_valid = 1
+                i_valid = min(i_fb + i_d, 4 * p_valid)
+
+                # 💡 실제 PR 점수는 0으로 고정
+                p_fb_at = 0
+                p_d_at = 0
+                p_t_at = 0
+                i_fb_at = min(i_fb, i_valid)
+                i_d_at = i_valid - i_fb_at
+
+                total = (
+                    self.score['feat_bug_is'] * i_fb_at +
+                    self.score['doc_is'] * i_d_at
+                )
+
+                scores[participant] = {
+                    "feat/bug PR": 0.0,
+                    "document PR": 0.0,
+                    "typo PR": 0.0,
+                    "feat/bug issue": self.score['feat_bug_is'] * i_fb_at,
+                    "document issue": self.score['doc_is'] * i_d_at,
+                    "total": total
+                }
+
+                total_score_sum += total
+                continue
             
             # 조정된 카운트 계산
             p_fb_at, p_d_at, p_t_at, i_fb_at, i_d_at = self._calculate_adjusted_counts(
