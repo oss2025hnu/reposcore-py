@@ -310,13 +310,14 @@ class RepoAnalyzer:
                 # 💡 실제 PR 점수는 0으로 고정
                 p_fb_at = 0
                 p_d_at = 0
-                p_t_at = 0
+                p_t_at = 1 if p_t > 0 else 0  # typo 1개 있으면 점수 부여
                 i_fb_at = min(i_fb, i_valid)
                 i_d_at = i_valid - i_fb_at
 
                 total = (
                     self.score['feat_bug_is'] * i_fb_at +
-                    self.score['doc_is'] * i_d_at
+                    self.score['doc_is'] * i_d_at +
+                    self.score['typo_pr'] * p_t_at
                 )
 
                 scores[participant] = {
