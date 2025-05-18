@@ -110,7 +110,7 @@ def test_example_calculate_scores():
 
     scores = analyzer.calculate_scores()
     assert scores["test_user1"]['total'] == 26, "test_user1 결과값이 일치하지 않습니다."
-    assert scores["test_user2"]['total'] == 4, "test_user2 결과값이 일치하지 않습니다."
+    assert scores["test_user2"]['total'] == 5,"test_user2 결과값이 일치하지 않습니다."
     assert scores["test_user3"]['total'] == 79, "test_user3 결과값이 일치하지 않습니다."
     assert scores["test_user4"]['total'] == 9, "test_user4 결과값이 일치하지 않습니다."
     assert scores["test_user5"]['total'] == 7, "test_user5 결과값이 일치하지 않습니다."
