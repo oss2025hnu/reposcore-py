@@ -23,6 +23,11 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+      
+      - name: pylint 코드 스타일 검사
+        run: |
+          pylint $(git ls-files '*.py')
+      
       - name: pytest를 사용한 테스트 실행
         run: |
           pytest tests --verbose --junitxml=test-results.xml
