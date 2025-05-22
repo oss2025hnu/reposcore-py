@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: 리포지토리 체크아웃
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Python 환경 설정
         uses: actions/setup-python@v5
@@ -40,3 +42,19 @@ jobs:
         with:
           name: test-results
           path: test-results.xml
+
+      - name: README.md 자동 생성 
+        run: |
+          python generate_readme.py  # ← README 생성 스크립트 실행
+
+      - name: 변경 사항 커밋 및 푸시 
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add README.md
+          git diff --cached --quiet || (
+            git commit -m "docs: 자동 생성된 README 갱신"  # ← 변경 있을 경우에만 커밋
+            git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}  # ← 토큰 푸시
+          )
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }} 
