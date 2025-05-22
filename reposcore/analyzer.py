@@ -134,7 +134,6 @@ class RepoAnalyzer:
 
             response = retry_request(self.SESSION,
                                     url,
-                                    max_retries=3,
                                     params={
                                         'state': 'all',
                                         'per_page': per_page,
