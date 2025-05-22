@@ -33,3 +33,9 @@ def retry(max_retries: int = 3, retry_delay: float = 5):
                     raise
         return wrapper
     return decorator
+
+@retry(max_retries=3, retry_delay=2)
+def retry_request(session, url, params=None, headers=None):
+    response = session.get(url, params=params, headers=headers)
+    response.raise_for_status()
+    return response
