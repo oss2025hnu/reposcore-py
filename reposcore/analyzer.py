@@ -283,8 +283,25 @@ class RepoAnalyzer:
         # 사용자 정보 매핑 (제공된 경우)
         if user_info:
             scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
+        
+        sorted_items = sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True)
 
-        return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
+        #공동 등수 처리
+        ranked_scores = {}
+        last_score = None
+        current_rank = 0
+        rank_counter = 0
+
+
+        for user, data in sorted_items:
+            rank_counter += 1
+            if data["total"] != last_score:
+                current_rank = rank_counter
+                last_score = data["total"]
+            data["rank"] = current_rank
+            ranked_scores[user] = data
+
+        return ranked_scores
 
     def calculate_scores(self, user_info: dict[str, str] | None = None) -> dict[str, dict[str, float]]:
         """참여자별 점수 계산"""
@@ -347,7 +364,7 @@ class RepoAnalyzer:
         if user_info:
             scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
 
-        return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
+        return self._finalize_scores(scores, total_score_sum, user_info)
     
     def set_semester_start_date(self, date: datetime.date) -> None:
         """--semester-start 옵션에서 받은 학기 시작일 저장"""
