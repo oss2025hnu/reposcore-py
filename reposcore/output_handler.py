@@ -286,7 +286,7 @@ class OutputHandler:
         ax.set_yticklabels(ranked_participants)
         ax.set_xlabel('Score')
         ax.set_title(
-            f'Repository Contribution Scores\n(분석 기준 시각: {timestamp})',
+            f'Repository Contribution Scores\n(Generated at {timestamp})',
             fontsize=14,
             loc='center',  # 또는 'left', 'right'
             color='black'
@@ -381,8 +381,8 @@ class OutputHandler:
             )
 
 
-        plt.xlabel("점수")
-        plt.title("사용자별 저장소 기여도 (py/js/cs)")
+        plt.xlabel("Score")
+        plt.title("Repository Contribution Scores (py/js/cs)")
         plt.legend(loc="upper right")
         plt.tight_layout()
         plt.yticks(range(len(ranked_usernames)), ranked_usernames)
@@ -403,9 +403,9 @@ class OutputHandler:
         plt.bar(x - width/2, pr_counts, width, label="PR", color='skyblue')
         plt.bar(x + width/2, issue_counts, width, label="Issue", color='lightgreen')
 
-        plt.xlabel("주차")
-        plt.ylabel("건수")
-        plt.title("주차별 GitHub 활동량 (PR/Issue)")
+        plt.xlabel("Week")
+        plt.ylabel("Count")
+        plt.title("GitHub Activity per Week (PR/Issue)")
         plt.xticks(x, [f"Week {w}" for w in weeks])
         plt.legend()
         plt.tight_layout()
