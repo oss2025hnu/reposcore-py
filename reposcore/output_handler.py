@@ -120,17 +120,20 @@ class OutputHandler:
         """결과를 CSV 파일로 출력"""
         timestamp = self.get_kst_timestamp()
         df = pd.DataFrame.from_dict(scores, orient='index')
-        # grade 컬럼 제거
+        if 'rank' in df.columns:
+            df.insert(0, 'rank', df.pop('rank'))
+            df = df.sort_values('rank')
         df = df.drop('grade', axis=1, errors='ignore')
         df = df.round(1)
         df.index.name = 'name'  # 인덱스 이름을 'name'으로 설정
-
         df.to_csv(save_path, encoding='utf-8')
 
 
     def generate_text(self, scores: dict[str, dict[str, float]], save_path: str) -> None:
         """PrettyTable을 사용해 참여자 점수를 표 형식으로 출력"""
         timestamp = self.get_kst_timestamp()
+
+        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1]['rank']))
 
         table = PrettyTable()
         table.field_names = [
@@ -142,7 +145,7 @@ class OutputHandler:
         for rank, (name, score) in enumerate(scores.items(), start=1):
             grade = self._calculate_grade(score["total"])
             table.add_row([
-                f"{rank}",
+                f"{int(score['rank'])}",
                 name,
                 f"{score['total']:5.1f}",
                 grade,
@@ -191,6 +194,23 @@ class OutputHandler:
             '/usr/share/fonts/truetype/baekmuk/baekmuk.ttf'  # 백묵
         ]
 
+        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1]["rank"]))
+        participants = list(sorted_scores.keys())
+        pr_scores = [sorted_scores[p]['feat/bug PR'] + sorted_scores[p]['document PR'] + sorted_scores[p]['typo PR'] for p in participants]
+        issue_scores = [sorted_scores[p]['feat/bug issue'] + sorted_scores[p]['document issue'] for p in participants]
+        total_scores = [sorted_scores[p]['total'] for p in participants]
+        def get_ordinal_suffix(rank: int) -> str:
+            if rank == 1:
+                return "1st"
+            elif rank == 2:
+                return "2nd"
+            elif rank == 3:
+                return "3rd"
+            else:
+                return f"{rank}th"
+
+        ranked_participants = [f"{user} ({get_ordinal_suffix(int(sorted_scores[user]['rank']))})" for user in participants]
+
         timestamp = self.get_kst_timestamp()
 
         # 등수를 영어 서수로 변환하는 함수
@@ -211,8 +231,8 @@ class OutputHandler:
         pr_scores = [score_data["feat/bug PR"] + score_data["document PR"] + score_data["typo PR"] for _, score_data in sorted_scores]
         issue_scores = [score_data["feat/bug issue"] + score_data["document issue"] for _, score_data in sorted_scores]
 
-        # ✅ 서수 등수 붙이기
-        ranked_participants = [f"{user} ({get_ordinal_suffix(i+1)})" for i, user in enumerate(participants)]
+        # 등수 붙이기
+        ranked_participants = [f"{user} ({get_ordinal_suffix(int(scores[user]['rank']))})" for user in participants]
 
         for font_path in font_paths:
             if os.path.exists(font_path):
@@ -401,7 +421,7 @@ class OutputHandler:
     def _generate_score_table_html(self, scores: dict, repo_name: str) -> str:
         """점수 테이블 HTML 생성"""
         # 총점 기준으로 사용자 정렬
-        sorted_users = sorted(scores.items(), key=lambda x: x[1].get('total', 0), reverse=True)
+        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1]['rank']))
         
         html = f"""
         <div class="table-responsive">
@@ -418,18 +438,18 @@ class OutputHandler:
                 <tbody>
         """.format(repo_name=repo_name)
         
-        for rank, (user, score_data) in enumerate(sorted_users, 1):
+        for user, score_data in sorted_scores.items():
             total_score = score_data.get('total', 0)
             grade = self._calculate_grade(total_score)
             html += f"""
                     <tr>
-                        <td>{rank}</td>
+                        <td>{score_data['rank']}</td>
                         <td>{user}</td>
                         <td>{total_score:.1f}</td>
                         <td>{grade}</td>
-                    </tr>
-            """.format(rank=rank, user=user, total_score=total_score, grade=grade)
-        
+                    </tr>        
+            """
+
         html += """
                 </tbody>
             </table>
