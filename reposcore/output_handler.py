@@ -133,7 +133,7 @@ class OutputHandler:
         """PrettyTable을 사용해 참여자 점수를 표 형식으로 출력"""
         timestamp = self.get_kst_timestamp()
 
-        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1]['rank']))
+        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1].get('rank', 0)))
 
         table = PrettyTable()
         table.field_names = [
@@ -423,7 +423,7 @@ class OutputHandler:
     def _generate_score_table_html(self, scores: dict, repo_name: str) -> str:
         """점수 테이블 HTML 생성"""
         # 총점 기준으로 사용자 정렬
-        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1]['rank']))
+        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1].get('rank', 0)))
         
         html = f"""
         <div class="table-responsive">
@@ -445,7 +445,7 @@ class OutputHandler:
             grade = self._calculate_grade(total_score)
             html += f"""
                     <tr>
-                        <td>{score_data['rank']}</td>
+                        <td>{score_data.get('rank', '-')}</td>
                         <td>{user}</td>
                         <td>{total_score:.1f}</td>
                         <td>{grade}</td>
