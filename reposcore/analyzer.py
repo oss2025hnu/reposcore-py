@@ -186,18 +186,26 @@ class RepoAnalyzer:
                 if 'pull_request' in item:
                     merged_at = item.get('pull_request', {}).get('merged_at')
                     if merged_at:
-                        for label in label_names:
-                            key = f'p_{label}'
-                            if key in self.participants[author]:
-                                self.participants[author][key] += 1
+                        # JS와 동일하게 첫 번째 라벨만 사용
+                        if label_names:  # 라벨이 존재하는 경우만
+                            first_label = label_names[0]  # 첫 번째 라벨만 선택
+                            if first_label in ['enhancement', 'bug']:
+                                self.participants[author]['p_enhancement'] += 1  # 기능/버그로 통합 카운트
+                            elif first_label == 'documentation':
+                                self.participants[author]['p_documentation'] += 1
+                            elif first_label == 'typo':
+                                self.participants[author]['p_typo'] += 1
 
                 # 이슈 처리 (open / reopened / completed 만 포함, not planned 제외)
                 else:
                     if state_reason in ('completed', 'reopened', None):
-                        for label in label_names:
-                            key = f'i_{label}'
-                            if key in self.participants[author]:
-                                self.participants[author][key] += 1
+                        # JS와 동일하게 첫 번째 라벨만 사용
+                        if label_names:  # 라벨이 존재하는 경우만
+                            first_label = label_names[0]  # 첫 번째 라벨만 선택
+                            if first_label in ['enhancement', 'bug']:
+                                self.participants[author]['i_enhancement'] += 1
+                            elif first_label == 'documentation':
+                                self.participants[author]['i_documentation'] += 1
 
             # 다음 페이지 검사
             link_header = response.headers.get('link', '')
