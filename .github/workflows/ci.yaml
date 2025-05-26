@@ -54,11 +54,16 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+          
+          # 현재 브랜치 확인 및 체크아웃
+          BRANCH_NAME="${{ github.ref_name }}"
+          git checkout -B "$BRANCH_NAME"
+          
           git add README.md
           git diff --cached --quiet && echo "README 변경 없음 - 커밋 생략됨" || (
             echo "README 변경 감지 = 커밋 및 푸시 실행"
-            git commit -m "docs: 자동 생성된 README 갱신"  # ← 변경 있을 경우에만 커밋
-            git push
+            git commit -m "docs: 자동 생성된 README 갱신"
+            git push origin "$BRANCH_NAME"
           )
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
