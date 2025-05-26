@@ -22,7 +22,7 @@ make requirements
 **⚠️ 반드시 저장소 최상위 디렉토리에서 실행해야 합니다. (python -m reposcore 명령은 상대 경로 기준으로 동작합니다.)**
 
 ```
-usage: python -m reposcore [-h] [-v] [owner/repo ...] [--output dir_name] [--format {table, text, chart, all}] [--check-limit] [--user-info path]
+usage: python -m reposcore [-h] [-v] [owner/repo ...] [--output dir_name] [--format {table, text, chart, html, all}] [--check-limit] [--user-info path]
 
 오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구
 
@@ -34,7 +34,7 @@ options:
   -h, --help            도움말 표시 후 종료
   -v, --verbose         자세한 로그를 출력합니다.
   --output dir_name     분석 결과를 저장할 출력 디렉토리 (기본값: 'results')
-  --format {table, text, chart, all} [{table, text, chart, all} ...]
+  --format {table, text, chart, html, all} [{table, text, chart, html, all} ...]
                         결과 출력 형식 선택 (복수 선택 가능, 예: --format table chart)
                         (기본값:'all')
   --grade               차트에 등급 표시
@@ -98,7 +98,7 @@ python -m reposcore <소유자/저장소> --semester-start YYYY-MM-DD --weekly-c
 
 ### py저장소 메인 모듈의 의미와 역할
 해당 프로젝트의 핵심 기능이 구현되어 있는 중심적인 파일입니다.
-일반적으로 __main__.py 이나 저장소 이름과 같은 파일로 구성되며, 프로그램을 실행할때 전체 흐름을 제어하는 중심 모듈 역할을 합니다.
+일반적으로 `__main__.py` 이나 저장소 이름과 같은 파일로 구성되며, 프로그램을 실행할때 전체 흐름을 제어하는 중심 모듈 역할을 합니다.
 이 모듈은 다음 역할을 수행합니다:
  - 애플리케이션 진입점 제공
 
