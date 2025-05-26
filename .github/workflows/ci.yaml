@@ -8,6 +8,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+        contents: write  # ✅ 푸시를 허용해야 git push 성공함
 
     steps:
       - name: 리포지토리 체크아웃
