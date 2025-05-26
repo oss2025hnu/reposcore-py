@@ -186,18 +186,26 @@ class RepoAnalyzer:
                 if 'pull_request' in item:
                     merged_at = item.get('pull_request', {}).get('merged_at')
                     if merged_at:
-                        for label in label_names:
-                            key = f'p_{label}'
-                            if key in self.participants[author]:
-                                self.participants[author][key] += 1
+                        # JS와 동일하게 첫 번째 라벨만 사용
+                        if label_names:  # 라벨이 존재하는 경우만
+                            first_label = label_names[0]  # 첫 번째 라벨만 선택
+                            if first_label in ['enhancement', 'bug']:
+                                self.participants[author]['p_enhancement'] += 1  # 기능/버그로 통합 카운트
+                            elif first_label == 'documentation':
+                                self.participants[author]['p_documentation'] += 1
+                            elif first_label == 'typo':
+                                self.participants[author]['p_typo'] += 1
 
                 # 이슈 처리 (open / reopened / completed 만 포함, not planned 제외)
                 else:
                     if state_reason in ('completed', 'reopened', None):
-                        for label in label_names:
-                            key = f'i_{label}'
-                            if key in self.participants[author]:
-                                self.participants[author][key] += 1
+                        # JS와 동일하게 첫 번째 라벨만 사용
+                        if label_names:  # 라벨이 존재하는 경우만
+                            first_label = label_names[0]  # 첫 번째 라벨만 선택
+                            if first_label in ['enhancement', 'bug']:
+                                self.participants[author]['i_enhancement'] += 1
+                            elif first_label == 'documentation':
+                                self.participants[author]['i_documentation'] += 1
 
             # 다음 페이지 검사
             link_header = response.headers.get('link', '')
@@ -282,8 +290,25 @@ class RepoAnalyzer:
         # 사용자 정보 매핑 (제공된 경우)
         if user_info:
             scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
+        
+        sorted_items = sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True)
 
-        return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
+        #공동 등수 처리
+        ranked_scores = {}
+        last_score = None
+        current_rank = 0
+        rank_counter = 0
+
+
+        for user, data in sorted_items:
+            rank_counter += 1
+            if data["total"] != last_score:
+                current_rank = rank_counter
+                last_score = data["total"]
+            data["rank"] = current_rank
+            ranked_scores[user] = data
+
+        return ranked_scores
 
     def calculate_scores(self, user_info: dict[str, str] | None = None) -> dict[str, dict[str, float]]:
         """참여자별 점수 계산"""
@@ -346,7 +371,7 @@ class RepoAnalyzer:
         if user_info:
             scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
 
-        return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
+        return self._finalize_scores(scores, total_score_sum, user_info)
     
     def set_semester_start_date(self, date: datetime.date) -> None:
         """--semester-start 옵션에서 받은 학기 시작일 저장"""
