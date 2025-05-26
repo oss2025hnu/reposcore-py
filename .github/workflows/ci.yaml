@@ -54,7 +54,7 @@ jobs:
           git add README.md
           git diff --cached --quiet || (
             git commit -m "docs: 자동 생성된 README 갱신"  # ← 변경 있을 경우에만 커밋
-            git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}  # ← 토큰 푸시
+            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}  # ← 토큰 푸시
           )
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
