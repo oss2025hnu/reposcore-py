@@ -55,7 +55,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "repository",
         type=str,
-        nargs="+",
+        nargs="*",
         metavar="owner/repo",
         help="분석할 GitHub 저장소들 (형식: '소유자/저장소'). 여러 저장소의 경우 공백 혹은 쉼표로 구분하여 입력"
     )
@@ -97,8 +97,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--token",
         type=str,
-        help="API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰"
-    )
+        help="API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰 (환경변수 GITHUB_TOKEN으로도 설정 가능)"
+    )   
     parser.add_argument(
         "--check-limit",
         action="store_true",
@@ -140,7 +140,7 @@ args = parse_arguments()
 
 def handle_individual_user_mode(args):
     repo = args.repository[0]
-    analyzer = RepoAnalyzer(repo, token=args.token, theme=args.theme)
+    analyzer = RepoAnalyzer(repo, theme=args.theme)
     analyzer.collect_PRs_and_issues()
 
     user_info = None
@@ -183,19 +183,32 @@ def merge_participants(
 def main() -> None:
     """Main execution function"""
     args = parse_arguments()
-    common_utils.is_verbose = args.verbose
-    github_token = args.token
-    if not args.token:
-        github_token = os.getenv('GITHUB_TOKEN')
-    elif args.token == '-':
-        github_token = sys.stdin.readline().strip()
 
-    if github_token and len(github_token) != 0:
-        validate_token(github_token)
+    # repository가 없으면 에러
+    if not args.repository:
+        logging.error("❌ 저장소를 지정해주세요.")
+        sys.exit(1)
+
+    common_utils.is_verbose = args.verbose
+    
+    # 토큰 처리 단순화
+    if args.token:
+        if args.token == '-':
+            # 표준 입력에서 토큰 읽기
+            github_token = sys.stdin.readline().strip()
+            os.environ['GITHUB_TOKEN'] = github_token
+        else:
+            # 명령행 인자로 받은 토큰 설정
+            os.environ['GITHUB_TOKEN'] = args.token
+    
+    # 토큰 검증 (환경변수에서 읽어서)
+    github_token = os.getenv('GITHUB_TOKEN')
+    if github_token and len(github_token) > 0:
+        validate_token()
 
     # --check-limit 옵션 처리: 이 옵션이 있으면 repository 인자 없이 실행됨.
     if args.check_limit:
-        check_rate_limit(token=github_token)
+        check_rate_limit() 
         sys.exit(0)
 
     # --user-info 옵션으로 지정된 파일이 존재하는지, JSON 파싱이 가능한지 검증
@@ -220,25 +233,8 @@ def main() -> None:
         [r.strip() for repo in repositories for r in repo.split(",") if r.strip()]
     ))
 
-    # 각 저장소 유효성 검사
+    # 각 저장소 유효성 검사 (먼저 다 검사)
     for repo in final_repositories:
-        analyzer = RepoAnalyzer(repo, token=github_token, theme=args.theme)
-
-    # 학기 시작일 설정은 collect 전에!
-        if args.weekly_chart:
-            if not args.semester_start:
-                logging.error("❌ --weekly-chart 사용 시 --semester-start 날짜를 반드시 지정해야 합니다.")
-                sys.exit(1)
-            try:
-                semester_start_date = datetime.strptime(args.semester_start, "%Y-%m-%d").date()
-                analyzer.set_semester_start_date(semester_start_date)
-            except ValueError:
-                logging.error("❌ 학기 시작일 형식이 잘못되었습니다. YYYY-MM-DD 형식으로 입력해 주세요.")
-                sys.exit(1)
-
-        analyzer.collect_PRs_and_issues()
-
-                
         if not validate_repo_format(repo):
             logging.error(f"오류: 저장소 '{repo}'는 'owner/repo' 형식으로 입력해야 합니다. 예) 'oss2025hnu/reposcore-py'")
             sys.exit(1)
@@ -261,9 +257,21 @@ def main() -> None:
         print("pip install tqdm")
         exit(1)
 
+    # 학기 시작일 미리 처리
+    semester_start_date = None
+    if args.weekly_chart:
+        if not args.semester_start:
+            logging.error("❌ --weekly-chart 사용 시 --semester-start 날짜를 반드시 지정해야 합니다.")
+            sys.exit(1)
+        try:
+            semester_start_date = datetime.strptime(args.semester_start, "%Y-%m-%d").date()
+        except ValueError:
+            logging.error("❌ 학기 시작일 형식이 잘못되었습니다. YYYY-MM-DD 형식으로 입력해 주세요.")
+            sys.exit(1)
+
     for repo in tqdm(final_repositories, desc="저장소 분석 진행"):
 
-        analyzer = RepoAnalyzer(repo, token=github_token, theme=args.theme)
+        analyzer = RepoAnalyzer(repo, theme=args.theme)
         output_handler = OutputHandler(theme=args.theme)
         if args.weekly_chart:
             if not args.semester_start:
@@ -405,7 +413,7 @@ def main() -> None:
             for repo in final_repositories:
                 log(f"분석 시작: {repo}", force=True)
 
-                analyzer = RepoAnalyzer(repo, token=github_token, theme=args.theme)
+                analyzer = RepoAnalyzer(repo, theme=args.theme)
                 if args.weekly_chart:
                     analyzer.set_semester_start_date(semester_start_date)
 
@@ -429,7 +437,7 @@ def main() -> None:
         log("\n=== 전체 저장소 통합 분석 ===", force=True)
 
         # 통합 분석을 위한 analyzer 생성
-        overall_analyzer = RepoAnalyzer("multiple_repos", token=github_token, theme=args.theme)
+        overall_analyzer = RepoAnalyzer("multiple_repos", theme=args.theme)
         overall_analyzer.participants = overall_participants
 
         # 통합 점수 계산

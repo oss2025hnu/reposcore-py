@@ -4,6 +4,7 @@ import requests
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from collections import defaultdict
+import os
 
 from .common_utils import log, is_verbose
 from .github_utils import *
@@ -11,7 +12,6 @@ from .theme_manager import ThemeManager
 
 import logging
 import sys
-import os
 
 ERROR_MESSAGES = {
     401: "❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요.",
@@ -51,14 +51,14 @@ class RepoAnalyzer:
     # 사용자 제외 목록
     EXCLUDED_USERS = {"kyahnu", "kyagrd"}
 
-    def __init__(self, repo_path: str, token: str | None = None, theme: str = 'default'):
+    def __init__(self, repo_path: str, theme: str = 'default'):  # token 파라미터 제거
         # 테스트용 저장소나 통합 분석용 저장소 식별
         self._is_test_repo = repo_path == "dummy/repo"
         self._is_multiple_repos = repo_path == "multiple_repos"
         
         # 테스트용이나 통합 분석용이 아닌 경우에만 실제 저장소 존재 여부 확인
         if not self._is_test_repo and not self._is_multiple_repos:
-            if not check_github_repo_exists(repo_path):
+            if not check_github_repo_exists(repo_path):  # 토큰 파라미터 제거
                 logging.error(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
                 sys.exit(1)
         elif self._is_test_repo:
@@ -79,9 +79,21 @@ class RepoAnalyzer:
         self._data_collected = True
         self.__previous_create_at = None
 
+        # 환경변수에서 토큰을 읽어서 세션 설정
         self.SESSION = requests.Session()
+        token = os.getenv('GITHUB_TOKEN')
         if token:
-            self.SESSION.headers.update({'Authorization': f'Bearer {token}'})
+            self.SESSION.headers.update({
+                'Authorization': f'Bearer {token}',
+                'Accept': 'application/vnd.github+json',
+                'User-Agent': 'reposcore-py'
+            })
+        else:
+            # 토큰이 없어도 표준 헤더는 설정
+            self.SESSION.headers.update({
+                'Accept': 'application/vnd.github+json',
+                'User-Agent': 'reposcore-py'
+            })
 
     @property
     def previous_create_at(self) -> int | None:
