@@ -133,7 +133,7 @@ class OutputHandler:
         """PrettyTable을 사용해 참여자 점수를 표 형식으로 출력"""
         timestamp = self.get_kst_timestamp()
 
-        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1]['rank']))
+        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1].get('rank', 0)))
 
         table = PrettyTable()
         table.field_names = [
@@ -194,7 +194,9 @@ class OutputHandler:
             '/usr/share/fonts/truetype/baekmuk/baekmuk.ttf'  # 백묵
         ]
 
-        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1]["rank"]))
+        sorted_items = sorted(scores.items(), key=lambda x: x[1].get("rank", 0))
+        sorted_scores = dict(sorted_items)
+
         participants = list(sorted_scores.keys())
         pr_scores = [sorted_scores[p]['feat/bug PR'] + sorted_scores[p]['document PR'] + sorted_scores[p]['typo PR'] for p in participants]
         issue_scores = [sorted_scores[p]['feat/bug issue'] + sorted_scores[p]['document issue'] for p in participants]
@@ -209,7 +211,7 @@ class OutputHandler:
             else:
                 return f"{rank}th"
 
-        ranked_participants = [f"{user} ({get_ordinal_suffix(int(sorted_scores[user]['rank']))})" for user in participants]
+        ranked_participants = [f"{user} ({get_ordinal_suffix(int(sorted_scores[user].get("rank", 0)))})" for user in participants]
 
         timestamp = self.get_kst_timestamp()
 
@@ -232,7 +234,7 @@ class OutputHandler:
         issue_scores = [score_data["feat/bug issue"] + score_data["document issue"] for _, score_data in sorted_scores]
 
         # 등수 붙이기
-        ranked_participants = [f"{user} ({get_ordinal_suffix(int(scores[user]['rank']))})" for user in participants]
+        ranked_participants = [f"{user} ({get_ordinal_suffix(int(scores[user].get('rank', 0)))})" for user in participants]
 
         for font_path in font_paths:
             if os.path.exists(font_path):
@@ -421,7 +423,7 @@ class OutputHandler:
     def _generate_score_table_html(self, scores: dict, repo_name: str) -> str:
         """점수 테이블 HTML 생성"""
         # 총점 기준으로 사용자 정렬
-        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1]['rank']))
+        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1].get('rank', 0)))
         
         html = f"""
         <div class="table-responsive">
@@ -443,7 +445,7 @@ class OutputHandler:
             grade = self._calculate_grade(total_score)
             html += f"""
                     <tr>
-                        <td>{score_data['rank']}</td>
+                        <td>{score_data.get('rank', '-')}</td>
                         <td>{user}</td>
                         <td>{total_score:.1f}</td>
                         <td>{grade}</td>
