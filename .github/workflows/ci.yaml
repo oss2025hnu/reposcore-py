@@ -9,13 +9,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
     permissions:
-        contents: write  # ✅ 푸시를 허용해야 git push 성공함
+      contents: write
 
     steps:
       - name: 리포지토리 체크아웃
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          token: ${{ secrets.GITHUB_TOKEN }}  # 토큰 명시적 설정
+          # persist-credentials: false 제거!
 
       - name: Python 환경 설정
         uses: actions/setup-python@v5
@@ -36,8 +37,8 @@ jobs:
         run: |
           pytest tests --verbose --junitxml=test-results.xml
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      # Push, Pull request시 테스트를 시행하고 결과를 test-results.xml로 생성함
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 통일
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -47,7 +48,7 @@ jobs:
 
       - name: README.md 자동 생성 
         run: |
-          python scripts/generate_readme.py  # ← README 생성 스크립트 실행
+          python scripts/generate_readme.py # ← README 생성 스크립트 실행
 
       - name: 변경 사항 커밋 및 푸시 
         run: |
@@ -57,7 +58,7 @@ jobs:
           git diff --cached --quiet && echo "README 변경 없음 - 커밋 생략됨" || (
             echo "README 변경 감지 = 커밋 및 푸시 실행"
             git commit -m "docs: 자동 생성된 README 갱신"  # ← 변경 있을 경우에만 커밋
-            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
+            git push
           )
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
