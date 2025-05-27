@@ -356,7 +356,7 @@ def main() -> None:
                 results_saved.append("TXT")
 
             # 3) 차트 이미지 저장
-            if FORMAT_CHART in formats:
+            if FORMAT_CHART in formats or FORMAT_HTML in formats:
                 chart_filename = "chart_grade.png" if args.grade else "chart.png"
                 chart_path = os.path.join(repo_output_dir, chart_filename)
                 output_handler.generate_chart(repo_scores, save_path=chart_path, show_grade=args.grade)
@@ -477,7 +477,7 @@ def main() -> None:
             results_saved.append("TXT")
 
         # 차트 이미지 저장
-        if FORMAT_CHART in formats:
+        if FORMAT_CHART in formats or FORMAT_HTML in formats:
             chart_filename = "chart_grade.png" if args.grade else "chart.png"
             chart_path = os.path.join(overall_output_dir, chart_filename)
             output_handler.generate_chart(overall_scores, save_path=chart_path, show_grade=args.grade)
