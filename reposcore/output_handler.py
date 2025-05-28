@@ -478,9 +478,12 @@ class OutputHandler:
 
         # 중복 추가 방지용 집합
         added_tabs = set()
+                
+        # overall이 존재할 경우 맨 앞의 순서로 변경
+        sorted_items = sorted(all_repo_data.items(), key=lambda x: (x[0] != 'overall', x[0]))
 
         # 각 저장소별로 탭과 콘텐츠 생성
-        for i, (repo_name, repo_data) in enumerate(all_repo_data.items()):
+        for i, (repo_name, repo_data) in enumerate(sorted_items):
             if repo_name in added_tabs:
                 continue  # 중복 방지
 
