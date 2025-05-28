@@ -270,7 +270,7 @@ class OutputHandler:
         ax.barh(y_pos, pr_scores, height=bar_height, label='PR', color=pr_color, edgecolor='none')
         ax.barh(y_pos, issue_scores, left=pr_scores, height=bar_height, label='Issue', color=issue_color, edgecolor='none')
 
-        # 점수 표시
+        # 점수 및 PR/Issue 비율 표시
         for i, total in enumerate(total_scores):
             if show_grade:
                 grade = self._calculate_grade(total)
@@ -279,7 +279,13 @@ class OutputHandler:
             else:
                 ax.text(total + 1, i, f'{total:.1f}', 
                     va='center', fontsize=self.CHART_CONFIG['font_size'])
-                
+            # 기본 점수 + 등급 표시
+            label = f"{total:.1f}"
+            if show_grade:
+                label += f" ({self._calculate_grade(total)})"
+            # 추가된 PR/Issue 비율
+            label += f" [PR: {int(pr_ratio*100)}%, Issue: {int(issue_ratio*100)}%]"
+            ax.text(total + 1, i, label, va='center', fontsize=self.CHART_CONFIG['font_size'])                
         # 평균, 최고점, 최저점
         avg_score, max_score, min_score = self._summarize_scores(scores)
 
