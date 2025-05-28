@@ -31,7 +31,8 @@ def test_main_without_repo_option():
         text=True
     )
     assert result.returncode != 0
-    assert "'owner/repo' 형식으로" in result.stdout or "required" in result.stderr
+    # 실제 출력 메시지에 맞게 수정
+    assert "저장소를 지정해주세요" in result.stdout
 
 # def test_main_invalid_token():
 #     """repo 옵션 없이 실행했을 때 에러 출력 확인"""

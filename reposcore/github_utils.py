@@ -4,6 +4,7 @@ import sys
 import time
 import requests
 import logging
+import os
 
 def validate_repo_format(repo: str) -> bool:
     pattern = r'^[\w\-]+/[\w\-]+$'
@@ -13,23 +14,33 @@ def validate_repo_format(repo: str) -> bool:
         print("저장소 형식이 올바르지 않습니다. 'owner/repo' 형식으로 입력해주세요.")
         return False
 
-def validate_token(github_token: str) -> None:
-    headers = {}
-    if github_token:
-        headers["Authorization"] = f"token {github_token}"
+def validate_token() -> None:
+    """환경변수에서 GitHub 토큰을 읽어서 검증"""
+    token = os.getenv('GITHUB_TOKEN')
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "reposcore-py"
+    }
+    if token:
+        headers["Authorization"] = f"token {token}"
+    
     response = requests.get("https://api.github.com/user", headers=headers)
     if response.status_code != 200:
         logging.error('❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요.')
         sys.exit(1)
 
 def check_github_repo_exists(repo: str) -> bool:
-    """
-    GitHub 저장소 존재 여부를 확인하는 함수.
-    
-    API 요청을 통해 저장소가 실제로 존재하는지 확인합니다.
-    """
+    """GitHub 저장소 존재 여부를 확인하는 함수 (환경변수에서 토큰 자동 읽기)"""
+    token = os.getenv('GITHUB_TOKEN')
     url = f"https://api.github.com/repos/{repo}"
-    response = requests.get(url)
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "reposcore-py"
+    }
+    if token:
+        headers["Authorization"] = f"token {token}"
+
+    response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
         return True
@@ -43,12 +54,16 @@ def check_github_repo_exists(repo: str) -> bool:
 
     return False
 
-
-def check_rate_limit(token: str | None = None) -> None:
-    """현재 GitHub API 요청 가능 횟수와 전체 한도를 확인하고 출력하는 함수"""
-    headers = {}
+def check_rate_limit() -> None:
+    """현재 GitHub API 요청 가능 횟수와 전체 한도를 확인하고 출력하는 함수 (환경변수에서 토큰 자동 읽기)"""
+    token = os.getenv('GITHUB_TOKEN')
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "reposcore-py"
+    }
     if token:
         headers["Authorization"] = f"token {token}"
+    
     response = requests.get("https://api.github.com/rate_limit", headers=headers)
     if response.status_code == 200:
         data = response.json()
@@ -58,7 +73,6 @@ def check_rate_limit(token: str | None = None) -> None:
         logging.info(f"GitHub API 요청 가능 횟수: {remaining} / {limit}")
     else:
         logging.error(f"API 요청 제한 정보를 가져오는데 실패했습니다 (status code: {response.status_code}).")
-
 
 @retry(max_retries=3, retry_delay=1.0)
 def retry_request(
@@ -70,6 +84,7 @@ def retry_request(
     """
     단순히 한 번만 요청을 보내고,
     네트워크 오류 시 retry_decorator가 재시도 처리합니다.
+    
+    Note: 이 함수는 이미 세션에 토큰이 설정되어 있다고 가정합니다.
     """
     return session.get(url, params=params, headers=headers)
-
