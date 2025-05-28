@@ -179,6 +179,8 @@ pytest tests/
   - GitHub API 사용 방법.
 - [토큰 생성 방법](docs/github-token-guide.md)
   - GitHub 토큰 생성 및 설정.
+- [환경변수로 토큰 설정하기](docs/github-token-env-guide.md)  
+  - GITHUB_TOKEN 환경변수 설정을 통해 토큰을 깔끔하게 입력하는 방법.
 - [cherry-pick 이용 가이드](docs/cherry-pick_guide.md)
   - cherry-pick 사용방법.
 
