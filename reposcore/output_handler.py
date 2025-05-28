@@ -281,6 +281,7 @@ class OutputHandler:
             else:
                 ax.text(total + 1, i, f'{total:.1f}', 
                     va='center', fontsize=self.CHART_CONFIG['font_size'])
+                
             pr_ratio, issue_ratio, _ = self._calculate_activity_ratios(scores)
             ax.text(total + 1, i, f' [PR: {int(pr_ratio*100)}%, Issue: {int(issue_ratio*100)}%]',
                 va='center', fontsize=self.CHART_CONFIG['font_size'])                
