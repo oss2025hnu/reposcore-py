@@ -322,7 +322,7 @@ class RepoAnalyzer:
 
         return ranked_scores
 
-    def calculate_scores(self, user_info: dict[str, str] | None = None) -> dict[str, dict[str, float]]:
+    def calculate_scores(self, user_info: dict[str, str] | None = None, min_contributions: int = 0) -> dict[str, dict[str, float]]:
         """참여자별 점수 계산"""
         scores = {}
         total_score_sum = 0
@@ -378,6 +378,9 @@ class RepoAnalyzer:
             
             scores[participant] = self._create_score_dict(p_fb_at, p_d_at, p_t_at, i_fb_at, i_d_at, total)
             total_score_sum += total
+
+        if min_contributions > 0:
+            scores = {user: s for user, s in scores.items() if s["total"] >= min_contributions}
 
         # 사용자 정보 매핑 (제공된 경우)
         if user_info:
