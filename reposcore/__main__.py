@@ -451,6 +451,22 @@ def main() -> None:
         for username in user_scores:
             user_scores[username]["total"] = sum(user_scores[username].values())
 
+        # 정렬
+        user_scores = defaultdict(dict, sorted(user_scores.items(), key=lambda x: x[1]['total'], reverse=True))
+        # rank 추가
+        current_rank = 1
+        prev_score = None
+
+        for i, (username, scores) in enumerate(user_scores.items()):
+            current_score = scores['total']
+            
+            # 동점자 처리
+            if prev_score is not None and current_score != prev_score:
+                current_rank = i + 1
+            
+            user_scores[username]['rank'] = current_rank
+            prev_score = current_score
+
         # 통합 결과 저장
         overall_output_dir = os.path.join(args.output, "overall")
         os.makedirs(overall_output_dir, exist_ok=True)
