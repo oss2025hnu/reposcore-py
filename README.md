@@ -39,7 +39,8 @@ options:
                         (기본값:'all')
   --grade               차트에 등급 표시
   --use-cache           participants 데이터를 캐시에서 불러올지 여부 (기본: API를 통해 새로 수집)
-  --token TOKEN         API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰
+  --token TOKEN         API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰 (환경변수 GITHUB_TOKEN으로도
+                        설정 가능)
   --check-limit         현재 GitHub API 요청 가능 횟수와 전체 한도를 확인합니다.
   --user-info USER_INFO
                         사용자 정보 파일의 경로
