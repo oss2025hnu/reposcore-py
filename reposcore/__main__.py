@@ -347,7 +347,7 @@ def main() -> None:
             results_saved = []
 
             # 1) CSV 테이블 저장
-            if FORMAT_TABLE in formats:
+            if FORMAT_TABLE in formats or FORMAT_HTML in formats:
                 table_path = os.path.join(repo_output_dir, "score.csv")
                 output_handler.generate_table(repo_scores, save_path=table_path)
                 output_handler.generate_count_csv(repo_scores, save_path=table_path)
