@@ -489,7 +489,10 @@ class OutputHandler:
             weekly_chart_path = repo_data.get('weekly_chart_path', '')
 
             # 상대 경로로 변환 (HTML에서의 경로)
-            rel_chart_path = os.path.join(repo_name, os.path.basename(chart_path)) if chart_path else ''
+            if repo_name == "overall_repository":
+                rel_chart_path = os.path.join("overall", os.path.basename(chart_path)) if chart_path else ''
+            else:
+                rel_chart_path = os.path.join(repo_name, os.path.basename(chart_path)) if chart_path else ''
             rel_weekly_chart_path = os.path.join(repo_name, os.path.basename(weekly_chart_path)) if weekly_chart_path else ''
 
             # CSV 다운로드 버튼 추가

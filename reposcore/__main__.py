@@ -475,17 +475,17 @@ def main() -> None:
         if FORMAT_HTML in formats:
             all_repo_html_data["overall"] = {
                 'scores': overall_scores,
-                'chart_path': os.path.join(overall_output_dir, "chart.png")
+                'chart_path': os.path.join(overall_output_dir, "ratio_chart.png")
             }
             all_repo_html_data["overall_repository"] = {
                 'scores': user_scores,
-                'chart_path': os.path.join(overall_output_dir, "chart.png")
+                'chart_path': os.path.join(overall_output_dir, "overall_chart.png")
             }
 
         results_saved = []
         # CSV 저장
         if FORMAT_TABLE in formats:
-            table_path = os.path.join(overall_output_dir, "score.csv")
+            table_path = os.path.join(overall_output_dir, "ratio_score.csv")
             output_handler.generate_table(overall_scores, save_path=table_path)
             output_handler.generate_count_csv(overall_scores, save_path=table_path)
             if args.verbose:
@@ -494,7 +494,7 @@ def main() -> None:
 
         # 텍스트 저장
         if FORMAT_TEXT in formats:
-            txt_path = os.path.join(overall_output_dir, "score.txt")
+            txt_path = os.path.join(overall_output_dir, "ratio_score.txt")
             output_handler.generate_text(overall_scores, txt_path)
             if args.verbose:
                 log(f"[통합 저장소] 텍스트 파일 저장 완료: {txt_path}", force=True)
@@ -502,7 +502,7 @@ def main() -> None:
 
         # 차트 이미지 저장
         if FORMAT_CHART in formats or FORMAT_HTML in formats:
-            chart_filename = "chart_grade.png" if args.grade else "chart.png"
+            chart_filename = "chart_grade.png" if args.grade else "ratio_chart.png"
             chart_path = os.path.join(overall_output_dir, chart_filename)
             output_handler.generate_chart(overall_scores, save_path=chart_path, show_grade=args.grade)
             if args.verbose:
@@ -541,8 +541,7 @@ def main() -> None:
     
     if len(final_repositories) > 1:
         # 저장 경로 지정하고 생성
-        overall_repo_dir = os.path.join(args.output, "overall_repository")
-        os.makedirs(overall_repo_dir, exist_ok=True)
+        overall_repo_dir = os.path.join(args.output, "overall")
 
         results_saved = []
 
@@ -584,7 +583,7 @@ def main() -> None:
         results_saved.append("TXT")
 
         # 📈 통합 차트 이미지 저장
-        chart_path = os.path.join(overall_repo_dir, "chart.png")
+        chart_path = os.path.join(overall_repo_dir, "overall_chart.png")
         output_handler.generate_repository_stacked_chart(user_scores, save_path=chart_path)
         if args.verbose:
             log(f"[📊 overall_repository] 누적 기여도 차트 저장 완료: {chart_path}", force=True)
