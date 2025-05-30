@@ -51,7 +51,7 @@ options:
   --semester-start SEMESTER_START
                         학기 시작일 (형식: YYYY-MM-DD, 예: 2025-03-04)
   --min-contributions MIN_CONTRIBUTIONS
-                        최소 기여 점수가 지정 값 이상인 사용자만 결과에 포함합니다.(기본값 : 2)
+                        최소 기여 점수가 지정 값 이상인 사용자만 결과에 포함합니다.(기본값 : 1)
 ```
 ## Clean results directory
 
