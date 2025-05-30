@@ -134,8 +134,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--min-contributions",
         type=int,
-        default=2,
-        help="최소 기여 점수가 지정 값 이상인 사용자만 결과에 포함합니다.(기본값 : 2)"
+        default=1,
+        help="최소 기여 점수가 지정 값 이상인 사용자만 결과에 포함합니다.(기본값 : 1)"
     )
     return parser.parse_args()
 
