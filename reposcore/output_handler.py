@@ -561,7 +561,7 @@ class OutputHandler:
             added_tabs.add(repo_name)
 
         # HTML 템플릿
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = self.get_kst_timestamp()
 
         # HTML 생성
         html = f"""
