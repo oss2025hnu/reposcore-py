@@ -61,7 +61,7 @@ options:
 make clean
 ```
 
-### 단일 저장소 분석
+## 단일 저장소 분석
 
 아래 명령어로 단일 GitHub 저장소의 기여도를 분석할 수 있습니다:
 
@@ -71,7 +71,7 @@ python -m reposcore oss2025hnu/reposcore-py --format all
 
 분석 결과 파일들은 results/사용자명_저장소명/ 경로에 저장됩니다.
 
-### 여러 저장소 통합 분석
+## 여러 저장소 통합 분석
 
 여러 저장소를 동시에 분석하면, 각 저장소 결과와 함께 **통합 점수**도 함께 출력됩니다:
 
@@ -82,7 +82,7 @@ python -m reposcore oss2025hnu/reposcore-py oss2025hnu/reposcore-js oss2025hnu/r
 - 각 저장소별 분석 결과는 results/사용자명_저장소명/ 폴더에 저장됩니다.
 - 전체 통합 분석 결과는 results/overall/ 폴더에 저장됩니다.
 
-#### 분석 결과 파일 안내
+### 분석 결과 파일 안내
 분석 결과로 생성되는 파일은 다음과 같습니다.
 - score.csv. : 기여자별 점수 데이터 (CSV 형식)
 - score.txt. : 기여자별 점수 요약 (텍스트)
@@ -94,7 +94,7 @@ python -m reposcore oss2025hnu/reposcore-py oss2025hnu/reposcore-js oss2025hnu/r
 python -m reposcore <소유자/저장소> --semester-start YYYY-MM-DD --weekly-chart
 ```
 
-### py저장소 메인 모듈의 의미와 역할
+## py저장소 메인 모듈의 의미와 역할
 해당 프로젝트의 핵심 기능이 구현되어 있는 중심적인 파일입니다.
 일반적으로 `__main__.py` 이나 저장소 이름과 같은 파일로 구성되며, 프로그램을 실행할때 전체 흐름을 제어하는 중심 모듈 역할을 합니다.
 이 모듈은 다음 역할을 수행합니다:
