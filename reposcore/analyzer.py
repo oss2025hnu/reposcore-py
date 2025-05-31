@@ -338,7 +338,7 @@ class RepoAnalyzer:
             p_valid, i_valid = self._calculate_valid_counts(p_fb, p_d, p_t, i_fb, i_d)
 
             # ✅ PR 0개인데 이슈만 있는 경우 1:4 규칙 보정
-            if p_fb == 0 and i_fb + i_d > 0:
+            if p_fb == 0 and p_d == 0 and p_t == 0 and (i_fb + i_d) > 0:
                 # PR은 없지만, 이슈를 위해 PR 1개 있다고 간주 (계산용)
                 p_valid = 1
                 i_valid = min(i_fb + i_d, 4 * p_valid)
