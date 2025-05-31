@@ -539,8 +539,15 @@ def main() -> None:
         df = df.astype(int)
         df.reset_index(inplace=True)
         df = df[["name"] + existing_columns]
-        df = df.sort_values(by="total", ascending=False)
+        df['rank'] = df['total'].rank(method='min', ascending=False).astype(int)
+        for _, row in df.iterrows():
+            username = row['name']
+            user_scores[username]['rank'] = int(row['rank'])
+        df = df.sort_values(by='rank')
+        cols = ['rank'] + [col for col in df.columns if col != 'rank']
+        df = df[cols]
         df.to_csv(output_path, encoding="utf-8", index=False)
+        return user_scores
     
     if len(final_repositories) > 1:
         # 저장 경로 지정하고 생성
@@ -549,7 +556,7 @@ def main() -> None:
         results_saved = []
 
         overall_csv_path = os.path.join(overall_repo_dir, "overall_scores.csv")
-        generate_overall_repository_csv(all_repo_scores, overall_csv_path)
+        user_scores = generate_overall_repository_csv(all_repo_scores, overall_csv_path)
         if args.verbose:
             log(f"[📊 overall_repository] 저장소별 사용자 점수 CSV 저장 완료: {overall_csv_path}", force=True)
         results_saved.append("CSV")
@@ -561,18 +568,10 @@ def main() -> None:
         table = PrettyTable()
         table.field_names = ["Rank", "Name"] + [repo.replace("/", "_") for repo in final_repositories] + ["Total"]
 
-        user_scores = defaultdict(dict)
-        for repo_name, repo_scores in all_repo_scores.items():
-            for username, score_dict in repo_scores.items():
-                user_scores[username][repo_name] = score_dict["total"]
-
-        for username in user_scores:
-            user_scores[username]["total"] = sum(user_scores[username].values())
-
         sorted_users = sorted(user_scores.items(), key=lambda x: x[1]["total"], reverse=True)
 
-        for rank, (username, score_dict) in enumerate(sorted_users, start=1):
-            row = [rank, username]
+        for username, score_dict in sorted_users:
+            row = [score_dict['rank'], username]
             for repo in final_repositories:
                 repo_key = repo.replace("/", "_")
                 row.append(score_dict.get(repo_key, 0))

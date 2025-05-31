@@ -341,11 +341,11 @@ class OutputHandler:
         # ✅ 모든 사용자 기준으로 저장소 키 수집
         repo_keys = set()
         for user_data in scores.values():
-            repo_keys.update([k for k in user_data.keys() if k not in ["total", "grade"]])
+            repo_keys.update([k for k in user_data.keys() if k not in ["total", "grade", "rank"]])
         repo_keys = sorted(repo_keys)  # 보기 좋게 정렬해도 OK
 
         # 총점 기준 내림차순 정렬
-        sorted_users = sorted(scores.items(), key=lambda x: x[1].get("total", 0), reverse=True)
+        sorted_users = sorted(scores.items(), key=lambda x: x[1].get("rank", float('inf')))
         usernames = [user for user, _ in sorted_users]
 
         # 서수 붙이기 (1st, 2nd, 3rd ...)
@@ -359,7 +359,7 @@ class OutputHandler:
             else:
                 return f"{rank}th"
 
-        ranked_usernames = [f"{user} ({get_ordinal_suffix(i+1)})" for i, user in enumerate(usernames)]
+        ranked_usernames = [f"{user} ({get_ordinal_suffix(score.get('rank', 0))})" for user, score in sorted_users]
 
         usernames = usernames[::-1]
         ranked_usernames = ranked_usernames[::-1]
@@ -455,6 +455,7 @@ class OutputHandler:
                 <tbody>
         """.format(repo_name=repo_name)
         
+        sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1].get('rank', 0)))
         for user, score_data in sorted_scores.items():
             total_score = score_data.get('total', 0)
             grade = self._calculate_grade(total_score)
