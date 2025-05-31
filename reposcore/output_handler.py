@@ -145,15 +145,15 @@ class OutputHandler:
         for rank, (name, score) in enumerate(scores.items(), start=1):
             grade = self._calculate_grade(score["total"])
             table.add_row([
-                f"{int(score['rank'])}",
+                int(score['rank']),
                 name,
-                f"{score['total']:5.1f}",
+                int(score['total']),
                 grade,
-                f"{score['feat/bug PR']:5.1f}",
-                f"{score['document PR']:5.1f}",
-                f"{score['typo PR']:5.1f}",
-                f"{score['feat/bug issue']:5.1f}",
-                f"{score['document issue']:5.1f}",
+                int(score['feat/bug PR']),
+                int(score['document PR']),
+                int(score['typo PR']),
+                int(score['feat/bug issue']),
+                int(score['document issue']),
             ])
         
         # 평균, 최고점, 최저점
