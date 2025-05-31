@@ -557,7 +557,6 @@ def main() -> None:
 
         overall_csv_path = os.path.join(overall_repo_dir, "overall_scores.csv")
         user_scores = generate_overall_repository_csv(all_repo_scores, overall_csv_path)
-        generate_overall_repository_csv(all_repo_scores, overall_csv_path)
         if args.verbose:
             log(f"[📊 overall_repository] 저장소별 사용자 점수 CSV 저장 완료: {overall_csv_path}", force=True)
         results_saved.append("CSV")
