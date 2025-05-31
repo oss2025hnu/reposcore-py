@@ -69,13 +69,7 @@ make clean
 python -m reposcore oss2025hnu/reposcore-py --format all
 ```
 
-분석 결과는 `results/사용자명_저장소명/` 경로에 아래와 같이 저장됩니다:
-
-- `score.csv`: 기여자별 점수 테이블 (CSV 형식)
-- `score.txt`: 기여자별 점수 요약 텍스트
-- `chart.png`: 기여도 시각화 차트
-
----
+분석 결과 파일들은 results/사용자명_저장소명/ 경로에 저장됩니다.
 
 ### 여러 저장소 통합 분석
 
@@ -85,13 +79,14 @@ python -m reposcore oss2025hnu/reposcore-py --format all
 python -m reposcore oss2025hnu/reposcore-py oss2025hnu/reposcore-js oss2025hnu/reposcore-cs --format all
 ```
 
-- 개별 저장소 분석 결과는 각각 `results/사용자명_저장소명/` 폴더에 저장됩니다.
-- 통합 분석 결과는 `results/overall/` 폴더에 저장되며 다음 파일들이 포함됩니다:
-  - `score.csv`: 전체 통합 기여자 점수 테이블
-  - `score.txt`: 전체 기여자 점수 요약 텍스트
-  - `chart.png`: 통합 기여도 시각화 차트
-  
----
+- 각 저장소별 분석 결과는 results/사용자명_저장소명/ 폴더에 저장됩니다.
+- 전체 통합 분석 결과는 results/overall/ 폴더에 저장됩니다.
+
+#### 분석 결과 파일 안내
+분석 결과로 생성되는 파일은 다음과 같습니다.
+- score.csv. : 기여자별 점수 데이터 (CSV 형식)
+- score.txt. : 기여자별 점수 요약 (텍스트)
+- chart.png. : 기여도 시각화 이미지
 
 ### 학기 시작일 기준 주차별 활동량 시각화
 학기 시작일을 기준으로 커밋, PR, 이슈 등의 주차별 활동량 변화를 시각화하는 결과를 생성합니다.
