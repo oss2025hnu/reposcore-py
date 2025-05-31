@@ -2,6 +2,7 @@ import sys
 import logging
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 is_verbose = False
 
@@ -29,5 +30,6 @@ def get_ordinal_suffix(rank):
 # -v or --vebose 옵션에 따라 로그를 다르게 출력하는 함수
 def log(message: str, force: bool = False):
     if is_verbose or force:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        kst = ZoneInfo("Asia/Seoul")
+        timestamp = datetime.now(tz=kst).strftime("%Y-%m-%d %H:%M:%S")
         print(f"[{timestamp}] {message}")

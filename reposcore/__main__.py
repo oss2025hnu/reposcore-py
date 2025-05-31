@@ -121,19 +121,22 @@ def parse_arguments() -> argparse.Namespace:
         default="default",
         help="테마 선택 (default 또는 dark)"
     )
-
     parser.add_argument(
     "--weekly-chart",
     action="store_true",
     help="주차별 PR/이슈 활동량 차트를 생성합니다."
     )
-
     parser.add_argument(
         "--semester-start",
         type=str,
         help="학기 시작일 (형식: YYYY-MM-DD, 예: 2025-03-04)"
     )
-
+    parser.add_argument(
+        "--min-contributions",
+        type=int,
+        default=1,
+        help="최소 기여 점수가 지정 값 이상인 사용자만 결과에 포함합니다.(기본값 : 1)"
+    )
     return parser.parse_args()
 
 args = parse_arguments()
@@ -319,7 +322,7 @@ def main() -> None:
                 if args.user_info and os.path.exists(args.user_info) else None
 
             # 스코어 계산
-            repo_scores = analyzer.calculate_scores(user_info)
+            repo_scores = analyzer.calculate_scores(user_info, min_contributions=args.min_contributions)
 
             # --user 옵션이 지정된 경우 사용자 점수 및 등수 출력
             user_lookup_name = user_info.get(args.user, args.user) if args.user and user_info else args.user
@@ -441,7 +444,7 @@ def main() -> None:
         overall_analyzer.participants = overall_participants
 
         # 통합 점수 계산
-        overall_scores = overall_analyzer.calculate_scores(user_info)
+        overall_scores = overall_analyzer.calculate_scores(user_info, min_contributions=args.min_contributions)
 
         # 저장소별 사용자 점수 통합 데이터
         user_scores = defaultdict(dict)
