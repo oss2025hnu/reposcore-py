@@ -487,7 +487,7 @@ def main() -> None:
 
         results_saved = []
         # CSV 저장
-        if FORMAT_TABLE in formats:
+        if FORMAT_TABLE in formats or FORMAT_HTML in formats:
             table_path = os.path.join(overall_output_dir, "ratio_score.csv")
             output_handler.generate_table(overall_scores, save_path=table_path)
             output_handler.generate_count_csv(overall_scores, save_path=table_path)
