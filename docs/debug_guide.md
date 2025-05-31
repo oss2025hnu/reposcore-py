@@ -99,6 +99,59 @@ def divide(x, y):
 divide(10, 0)
 ```
 
+## 6. Verbose 로깅 및 테스트 캡처
+
+### 6.1 -v / --verbose 옵션 활성화 및 로그 레벨 구분
+
+`-v` 또는 `--verbose` 옵션을 통해 로그 출력 레벨을 조절할 수 있습니다.  
+옵션 활성 시 로그 레벨이 `DEBUG`로 설정되어 상세 로그를 확인할 수 있으며,  
+옵션이 없으면 기본 로그 레벨은 `INFO`로 동작합니다.
+
+```python
+import argparse
+import logging
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbose', action='store_true', help='Show detailed logs')
+    return parser.parse_args()
+
+def setup_logger(verbose=False):
+    level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(
+        level=level,
+        format='%(asctime)s | %(levelname)s | %(message)s'
+    )
+    return logging.getLogger("main")
+
+args = parse_args()
+logger = setup_logger(args.verbose)
+```
+
+### 6.2 subprocess.run() 사용 시 stderr 로그 캡처 
+
+```python
+import subprocess
+
+result = subprocess.run(
+    ["python", "main.py", "--verbose"],
+    capture_output=True,
+    text=True,
+    stderr=subprocess.STDOUT  # stderr를 stdout으로 합쳐 캡처
+)
+
+print("Captured output:\n", result.stdout)
+```
+
+### 6.3 테스트 환경에서 stdout만 검사할 때 발생하는 문제와 해결책
+
+- **문제**: 로그가 stderr에 출력되면, stdout만 검사하는 테스트에서는 로그 누락으로 실패할 수 있습니다.
+
+- **해결책**:
+  1. `subprocess.run()` 호출 시 `stderr=subprocess.STDOUT` 옵션으로 stderr 출력을 stdout과 합칩니다.
+  2. 테스트 프레임워크 설정을 조정해 stderr도 함께 캡처하거나, 전체 출력을 검사하도록 변경합니다.
+
+
 ---
 
 이 문서는 신규 개발자들이 문제를 쉽게 파악하고 효과적으로 디버깅할 수 있도록 도와주며, 전체적인 코드 유지보수성과 협업 효율을 높이는 데 기여할 수 있습니다.
