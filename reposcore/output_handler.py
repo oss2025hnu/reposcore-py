@@ -331,7 +331,7 @@ class OutputHandler:
         # ✅ 모든 사용자 기준으로 저장소 키 수집
         repo_keys = set()
         for user_data in scores.values():
-            repo_keys.update([k for k in user_data.keys() if k not in ["total", "grade"]])
+            repo_keys.update([k for k in user_data.keys() if k not in ["total", "grade", "rank"]])
         repo_keys = sorted(repo_keys)  # 보기 좋게 정렬해도 OK
 
         # 총점 기준 내림차순 정렬
