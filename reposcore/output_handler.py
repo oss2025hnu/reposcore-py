@@ -272,19 +272,29 @@ class OutputHandler:
 
         pr_ratio, issue_ratio, _ = self._calculate_activity_ratios(scores)
         
+        x_offset = max(total_scores) * 0.02  # 전체 점수의 2%만큼 오른쪽으로
+
         # 점수 및 PR/Issue 비율 표시
-        for i, total in enumerate(total_scores):
-            if show_grade:
-                grade = self._calculate_grade(total)
-                ax.text(total + 1, i, f'{total:.1f} ({grade})', 
-                    va='center', fontsize=self.CHART_CONFIG['font_size'])
-            else:
-                ax.text(total + 1, i, f'{total:.1f}', 
-                    va='center', fontsize=self.CHART_CONFIG['font_size'])
-                
-            pr_ratio, issue_ratio, _ = self._calculate_activity_ratios(scores)
-            ax.text(total + 1, i, f' [PR: {int(pr_ratio*100)}%, Issue: {int(issue_ratio*100)}%]',
-                va='center', fontsize=self.CHART_CONFIG['font_size'])                
+        for i, user in enumerate(participants):
+            total = total_scores[i]
+            grade = self._calculate_grade(total)
+
+            pr_score = pr_scores[i]
+            issue_score = issue_scores[i]
+            total_contrib = pr_score + issue_score
+            pr_ratio = pr_score / total_contrib if total_contrib else 0
+            issue_ratio = issue_score / total_contrib if total_contrib else 0
+
+            # 두 줄로 출력 (줄바꿈)
+            label = f'{total:.1f} ({grade})\nP:{int(pr_ratio*100)}% I:{int(issue_ratio*100)}%'
+
+            # 위치 조정 (짧은 막대 보호)
+            x_offset = max(total_scores) * 0.02
+            text_x = total + x_offset if total > 3 else total + 2.0
+
+            # 폰트 크기 조절
+            ax.text(text_x, i, label, va='center', fontsize=8) 
+
         # 평균, 최고점, 최저점
         avg_score, max_score, min_score = self._summarize_scores(scores)
 
