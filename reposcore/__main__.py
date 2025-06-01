@@ -51,14 +51,6 @@ def parse_arguments() -> argparse.Namespace:
         description="오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구",
         add_help=False
     )
-    # 저장소 인자를 하나 이상 받도록 nargs="+"로 변경
-    parser.add_argument(
-        "repository",
-        type=str,
-        nargs="*",
-        metavar="owner/repo",
-        help="분석할 GitHub 저장소들 (형식: '소유자/저장소'). 여러 저장소의 경우 공백 혹은 쉼표로 구분하여 입력"
-    )
     parser.add_argument(
         "-h", "--help",
         action="help",
@@ -79,7 +71,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--format",
         choices=VALID_FORMATS,
-        nargs='+',
+        nargs="+", 
         default=[FORMAT_ALL],
         metavar=f"{{{VALID_FORMATS_DISPLAY}}}",
         help =  f"결과 출력 형식 선택 (복수 선택 가능, 예: --format {FORMAT_TABLE} {FORMAT_CHART}) (기본값:'{FORMAT_ALL}')"
@@ -137,12 +129,17 @@ def parse_arguments() -> argparse.Namespace:
         default=1,
         help="최소 기여 점수가 지정 값 이상인 사용자만 결과에 포함합니다.(기본값 : 1)"
     )
+    parser.add_argument(
+        "repositories", 
+        nargs="+", 
+        help="GitHub repositories in 'owner/repo' format"
+    )
     return parser.parse_args()
 
 args = parse_arguments()
 
 def handle_individual_user_mode(args):
-    repo = args.repository[0]
+    repo = args.repositories[0]
     analyzer = RepoAnalyzer(repo, theme=args.theme)
     analyzer.collect_PRs_and_issues()
 
@@ -153,7 +150,7 @@ def handle_individual_user_mode(args):
 
     repo_scores = analyzer.calculate_scores(user_info)
     user_lookup_name = user_info.get(args.user, args.user) if user_info else args.user
-
+    
     if user_lookup_name in repo_scores:
         sorted_users = list(repo_scores.keys())
         rank = sorted_users.index(user_lookup_name) + 1
@@ -164,7 +161,7 @@ def handle_individual_user_mode(args):
     else:
         print(f"[INFO] 사용자 '{args.user}'의 점수를 찾을 수 없습니다.")
 
-if args.user and len(args.repository) == 1:
+if args.user and len(args.repositories) == 1:
     handle_individual_user_mode(args)
     sys.exit(0)
 
@@ -182,13 +179,17 @@ def merge_participants(
                 overall[user][key] = overall[user].get(key, 0) + value
     return overall
 
+def parse_owner_repo(repo_str):
+    if '/' not in repo_str:
+        raise ValueError(f"Invalid repository format: '{repo_str}'. Expected format is 'owner/repo'")
+    return repo_str.split('/', 1)  
 
 def main() -> None:
     """Main execution function"""
     args = parse_arguments()
 
     # repository가 없으면 에러
-    if not args.repository:
+    if not args.repositories:
         logging.error("❌ 저장소를 지정해주세요.")
         sys.exit(1)
 
@@ -230,7 +231,7 @@ def main() -> None:
     else:
         user_info = None
 
-    repositories: list[str] = args.repository
+    repositories: list[str] = args.repositories
     # 쉼표로 여러 저장소가 입력된 경우 분리
     final_repositories = list(dict.fromkeys(
         [r.strip() for repo in repositories for r in repo.split(",") if r.strip()]
@@ -348,7 +349,6 @@ def main() -> None:
             all_repo_scores[repo_safe_name] = repo_scores
 
             results_saved = []
-
             # 1) CSV 테이블 저장
             if FORMAT_TABLE in formats or FORMAT_HTML in formats:
                 table_path = os.path.join(repo_output_dir, "score.csv")
@@ -613,7 +613,6 @@ def main() -> None:
         log("HTML 보고서 생성 중...", force=True)
         output_handler.generate_html_report(all_repo_html_data, args.output)
         log("HTML 보고서 생성 완료", force=True)
-
 
 
 if __name__ == "__main__":
