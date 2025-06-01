@@ -27,8 +27,7 @@ usage: python -m reposcore [-h] [-v] [owner/repo ...] [--output dir_name] [--for
 오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구
 
 positional arguments:
-  owner/repo            분석할 GitHub 저장소들 (형식: '소유자/저장소'). 여러 저장소의 경우 공백 혹은 쉼표로
-                        구분하여 입력
+  repositories          GitHub repositories in 'owner/repo' format
 
 options:
   -h, --help            도움말 표시 후 종료
