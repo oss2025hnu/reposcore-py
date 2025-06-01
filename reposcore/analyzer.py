@@ -4,6 +4,7 @@ import requests
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from collections import defaultdict
+import os
 
 from .common_utils import log, is_verbose
 from .github_utils import *
@@ -11,7 +12,6 @@ from .theme_manager import ThemeManager
 
 import logging
 import sys
-import os
 
 ERROR_MESSAGES = {
     401: "❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요.",
@@ -51,14 +51,14 @@ class RepoAnalyzer:
     # 사용자 제외 목록
     EXCLUDED_USERS = {"kyahnu", "kyagrd"}
 
-    def __init__(self, repo_path: str, token: str | None = None, theme: str = 'default'):
+    def __init__(self, repo_path: str, theme: str = 'default'):  # token 파라미터 제거
         # 테스트용 저장소나 통합 분석용 저장소 식별
         self._is_test_repo = repo_path == "dummy/repo"
         self._is_multiple_repos = repo_path == "multiple_repos"
         
         # 테스트용이나 통합 분석용이 아닌 경우에만 실제 저장소 존재 여부 확인
         if not self._is_test_repo and not self._is_multiple_repos:
-            if not check_github_repo_exists(repo_path):
+            if not check_github_repo_exists(repo_path):  # 토큰 파라미터 제거
                 logging.error(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
                 sys.exit(1)
         elif self._is_test_repo:
@@ -79,9 +79,21 @@ class RepoAnalyzer:
         self._data_collected = True
         self.__previous_create_at = None
 
+        # 환경변수에서 토큰을 읽어서 세션 설정
         self.SESSION = requests.Session()
+        token = os.getenv('GITHUB_TOKEN')
         if token:
-            self.SESSION.headers.update({'Authorization': f'Bearer {token}'})
+            self.SESSION.headers.update({
+                'Authorization': f'Bearer {token}',
+                'Accept': 'application/vnd.github+json',
+                'User-Agent': 'reposcore-py'
+            })
+        else:
+            # 토큰이 없어도 표준 헤더는 설정
+            self.SESSION.headers.update({
+                'Accept': 'application/vnd.github+json',
+                'User-Agent': 'reposcore-py'
+            })
 
     @property
     def previous_create_at(self) -> int | None:
@@ -134,7 +146,6 @@ class RepoAnalyzer:
 
             response = retry_request(self.SESSION,
                                     url,
-                                    max_retries=3,
                                     params={
                                         'state': 'all',
                                         'per_page': per_page,
@@ -187,18 +198,26 @@ class RepoAnalyzer:
                 if 'pull_request' in item:
                     merged_at = item.get('pull_request', {}).get('merged_at')
                     if merged_at:
-                        for label in label_names:
-                            key = f'p_{label}'
-                            if key in self.participants[author]:
-                                self.participants[author][key] += 1
+                        # JS와 동일하게 첫 번째 라벨만 사용
+                        if label_names:  # 라벨이 존재하는 경우만
+                            first_label = label_names[0]  # 첫 번째 라벨만 선택
+                            if first_label in ['enhancement', 'bug']:
+                                self.participants[author]['p_enhancement'] += 1  # 기능/버그로 통합 카운트
+                            elif first_label == 'documentation':
+                                self.participants[author]['p_documentation'] += 1
+                            elif first_label == 'typo':
+                                self.participants[author]['p_typo'] += 1
 
                 # 이슈 처리 (open / reopened / completed 만 포함, not planned 제외)
                 else:
                     if state_reason in ('completed', 'reopened', None):
-                        for label in label_names:
-                            key = f'i_{label}'
-                            if key in self.participants[author]:
-                                self.participants[author][key] += 1
+                        # JS와 동일하게 첫 번째 라벨만 사용
+                        if label_names:  # 라벨이 존재하는 경우만
+                            first_label = label_names[0]  # 첫 번째 라벨만 선택
+                            if first_label in ['enhancement', 'bug']:
+                                self.participants[author]['i_enhancement'] += 1
+                            elif first_label == 'documentation':
+                                self.participants[author]['i_documentation'] += 1
 
             # 다음 페이지 검사
             link_header = response.headers.get('link', '')
@@ -283,10 +302,27 @@ class RepoAnalyzer:
         # 사용자 정보 매핑 (제공된 경우)
         if user_info:
             scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
+        
+        sorted_items = sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True)
 
-        return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
+        #공동 등수 처리
+        ranked_scores = {}
+        last_score = None
+        current_rank = 0
+        rank_counter = 0
 
-    def calculate_scores(self, user_info: dict[str, str] | None = None) -> dict[str, dict[str, float]]:
+
+        for user, data in sorted_items:
+            rank_counter += 1
+            if data["total"] != last_score:
+                current_rank = rank_counter
+                last_score = data["total"]
+            data["rank"] = current_rank
+            ranked_scores[user] = data
+
+        return ranked_scores
+
+    def calculate_scores(self, user_info: dict[str, str] | None = None, min_contributions: int = 0) -> dict[str, dict[str, float]]:
         """참여자별 점수 계산"""
         scores = {}
         total_score_sum = 0
@@ -300,6 +336,37 @@ class RepoAnalyzer:
             
             # 유효 카운트 계산
             p_valid, i_valid = self._calculate_valid_counts(p_fb, p_d, p_t, i_fb, i_d)
+
+            # ✅ PR 0개인데 이슈만 있는 경우 1:4 규칙 보정
+            if p_fb == 0 and p_d == 0 and p_t == 0 and (i_fb + i_d) > 0:
+                # PR은 없지만, 이슈를 위해 PR 1개 있다고 간주 (계산용)
+                p_valid = 1
+                i_valid = min(i_fb + i_d, 4 * p_valid)
+
+                # 💡 실제 PR 점수는 0으로 고정
+                p_fb_at = 0
+                p_d_at = 0
+                p_t_at = 1 if p_t > 0 else 0  # typo 1개 있으면 점수 부여
+                i_fb_at = min(i_fb, i_valid)
+                i_d_at = i_valid - i_fb_at
+
+                total = (
+                    self.score['feat_bug_is'] * i_fb_at +
+                    self.score['doc_is'] * i_d_at +
+                    self.score['typo_pr'] * p_t_at
+                )
+
+                scores[participant] = {
+                    "feat/bug PR": 0.0,
+                    "document PR": 0.0,
+                    "typo PR": 0.0,
+                    "feat/bug issue": self.score['feat_bug_is'] * i_fb_at,
+                    "document issue": self.score['doc_is'] * i_d_at,
+                    "total": total
+                }
+
+                total_score_sum += total
+                continue
             
             # 조정된 카운트 계산
             p_fb_at, p_d_at, p_t_at, i_fb_at, i_d_at = self._calculate_adjusted_counts(
@@ -312,11 +379,14 @@ class RepoAnalyzer:
             scores[participant] = self._create_score_dict(p_fb_at, p_d_at, p_t_at, i_fb_at, i_d_at, total)
             total_score_sum += total
 
+        if min_contributions > 0:
+            scores = {user: s for user, s in scores.items() if s["total"] >= min_contributions}
+
         # 사용자 정보 매핑 (제공된 경우)
         if user_info:
             scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
 
-        return dict(sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True))
+        return self._finalize_scores(scores, total_score_sum, user_info)
     
     def set_semester_start_date(self, date: datetime.date) -> None:
         """--semester-start 옵션에서 받은 학기 시작일 저장"""

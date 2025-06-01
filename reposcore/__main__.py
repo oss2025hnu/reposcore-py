@@ -20,9 +20,10 @@ from . import common_utils
 FORMAT_TABLE = "table"
 FORMAT_TEXT = "text"
 FORMAT_CHART = "chart"
+FORMAT_HTML = "html"
 FORMAT_ALL = "all"
 
-VALID_FORMATS = [FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART, FORMAT_ALL]
+VALID_FORMATS = [FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART, FORMAT_HTML, FORMAT_ALL]
 VALID_FORMATS_DISPLAY = ", ".join(VALID_FORMATS)
 
 # 친절한 오류 메시지를 출력할 ArgumentParser 클래스
@@ -54,7 +55,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "repository",
         type=str,
-        nargs="+",
+        nargs="*",
         metavar="owner/repo",
         help="분석할 GitHub 저장소들 (형식: '소유자/저장소'). 여러 저장소의 경우 공백 혹은 쉼표로 구분하여 입력"
     )
@@ -96,8 +97,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--token",
         type=str,
-        help="API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰"
-    )
+        help="API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰 (환경변수 GITHUB_TOKEN으로도 설정 가능)"
+    )   
     parser.add_argument(
         "--check-limit",
         action="store_true",
@@ -120,26 +121,29 @@ def parse_arguments() -> argparse.Namespace:
         default="default",
         help="테마 선택 (default 또는 dark)"
     )
-
     parser.add_argument(
     "--weekly-chart",
     action="store_true",
     help="주차별 PR/이슈 활동량 차트를 생성합니다."
     )
-
     parser.add_argument(
         "--semester-start",
         type=str,
         help="학기 시작일 (형식: YYYY-MM-DD, 예: 2025-03-04)"
     )
-
+    parser.add_argument(
+        "--min-contributions",
+        type=int,
+        default=1,
+        help="최소 기여 점수가 지정 값 이상인 사용자만 결과에 포함합니다.(기본값 : 1)"
+    )
     return parser.parse_args()
 
 args = parse_arguments()
 
 def handle_individual_user_mode(args):
     repo = args.repository[0]
-    analyzer = RepoAnalyzer(repo, token=args.token, theme=args.theme)
+    analyzer = RepoAnalyzer(repo, theme=args.theme)
     analyzer.collect_PRs_and_issues()
 
     user_info = None
@@ -182,19 +186,32 @@ def merge_participants(
 def main() -> None:
     """Main execution function"""
     args = parse_arguments()
-    common_utils.is_verbose = args.verbose
-    github_token = args.token
-    if not args.token:
-        github_token = os.getenv('GITHUB_TOKEN')
-    elif args.token == '-':
-        github_token = sys.stdin.readline().strip()
 
-    if github_token and len(github_token) != 0:
-        validate_token(github_token)
+    # repository가 없으면 에러
+    if not args.repository:
+        logging.error("❌ 저장소를 지정해주세요.")
+        sys.exit(1)
+
+    common_utils.is_verbose = args.verbose
+    
+    # 토큰 처리 단순화
+    if args.token:
+        if args.token == '-':
+            # 표준 입력에서 토큰 읽기
+            github_token = sys.stdin.readline().strip()
+            os.environ['GITHUB_TOKEN'] = github_token
+        else:
+            # 명령행 인자로 받은 토큰 설정
+            os.environ['GITHUB_TOKEN'] = args.token
+    
+    # 토큰 검증 (환경변수에서 읽어서)
+    github_token = os.getenv('GITHUB_TOKEN')
+    if github_token and len(github_token) > 0:
+        validate_token()
 
     # --check-limit 옵션 처리: 이 옵션이 있으면 repository 인자 없이 실행됨.
     if args.check_limit:
-        check_rate_limit(token=github_token)
+        check_rate_limit() 
         sys.exit(0)
 
     # --user-info 옵션으로 지정된 파일이 존재하는지, JSON 파싱이 가능한지 검증
@@ -219,25 +236,8 @@ def main() -> None:
         [r.strip() for repo in repositories for r in repo.split(",") if r.strip()]
     ))
 
-    # 각 저장소 유효성 검사
+    # 각 저장소 유효성 검사 (먼저 다 검사)
     for repo in final_repositories:
-        analyzer = RepoAnalyzer(repo, token=github_token, theme=args.theme)
-
-    # 학기 시작일 설정은 collect 전에!
-        if args.weekly_chart:
-            if not args.semester_start:
-                logging.error("❌ --weekly-chart 사용 시 --semester-start 날짜를 반드시 지정해야 합니다.")
-                sys.exit(1)
-            try:
-                semester_start_date = datetime.strptime(args.semester_start, "%Y-%m-%d").date()
-                analyzer.set_semester_start_date(semester_start_date)
-            except ValueError:
-                logging.error("❌ 학기 시작일 형식이 잘못되었습니다. YYYY-MM-DD 형식으로 입력해 주세요.")
-                sys.exit(1)
-
-        analyzer.collect_PRs_and_issues()
-
-                
         if not validate_repo_format(repo):
             logging.error(f"오류: 저장소 '{repo}'는 'owner/repo' 형식으로 입력해야 합니다. 예) 'oss2025hnu/reposcore-py'")
             sys.exit(1)
@@ -249,7 +249,8 @@ def main() -> None:
 
     overall_participants = {}
     all_repo_scores = {}
-    
+    all_repo_html_data = {}  # HTML 보고서 생성을 위한 데이터 저장
+
     #저장소별로 분석 후 '개별 결과'도 저장하기
     try:
         from tqdm import tqdm
@@ -259,9 +260,21 @@ def main() -> None:
         print("pip install tqdm")
         exit(1)
 
+    # 학기 시작일 미리 처리
+    semester_start_date = None
+    if args.weekly_chart:
+        if not args.semester_start:
+            logging.error("❌ --weekly-chart 사용 시 --semester-start 날짜를 반드시 지정해야 합니다.")
+            sys.exit(1)
+        try:
+            semester_start_date = datetime.strptime(args.semester_start, "%Y-%m-%d").date()
+        except ValueError:
+            logging.error("❌ 학기 시작일 형식이 잘못되었습니다. YYYY-MM-DD 형식으로 입력해 주세요.")
+            sys.exit(1)
+
     for repo in tqdm(final_repositories, desc="저장소 분석 진행"):
 
-        analyzer = RepoAnalyzer(repo, token=github_token, theme=args.theme)
+        analyzer = RepoAnalyzer(repo, theme=args.theme)
         output_handler = OutputHandler(theme=args.theme)
         if args.weekly_chart:
             if not args.semester_start:
@@ -309,7 +322,7 @@ def main() -> None:
                 if args.user_info and os.path.exists(args.user_info) else None
 
             # 스코어 계산
-            repo_scores = analyzer.calculate_scores(user_info)
+            repo_scores = analyzer.calculate_scores(user_info, min_contributions=args.min_contributions)
 
             # --user 옵션이 지정된 경우 사용자 점수 및 등수 출력
             user_lookup_name = user_info.get(args.user, args.user) if args.user and user_info else args.user
@@ -326,7 +339,7 @@ def main() -> None:
             # 출력 형식
             formats = set(args.format)
             if FORMAT_ALL in formats:
-                formats = {FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART}
+                formats = {FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART, FORMAT_HTML}
 
             # 저장소별 폴더 생성 (owner/repo -> owner_repo)
             repo_safe_name = repo.replace('/', '_')
@@ -337,7 +350,7 @@ def main() -> None:
             results_saved = []
 
             # 1) CSV 테이블 저장
-            if FORMAT_TABLE in formats:
+            if FORMAT_TABLE in formats or FORMAT_HTML in formats:
                 table_path = os.path.join(repo_output_dir, "score.csv")
                 output_handler.generate_table(repo_scores, save_path=table_path)
                 output_handler.generate_count_csv(repo_scores, save_path=table_path)
@@ -354,7 +367,7 @@ def main() -> None:
                 results_saved.append("TXT")
 
             # 3) 차트 이미지 저장
-            if FORMAT_CHART in formats:
+            if FORMAT_CHART in formats or FORMAT_HTML in formats:
                 chart_filename = "chart_grade.png" if args.grade else "chart.png"
                 chart_path = os.path.join(repo_output_dir, chart_filename)
                 output_handler.generate_chart(repo_scores, save_path=chart_path, show_grade=args.grade)
@@ -362,8 +375,26 @@ def main() -> None:
                     log(f"차트 이미지 저장 완료: {chart_path}", force=True)
                 results_saved.append("Chart")
 
+            # HTML 보고서 생성을 위한 데이터 준비 (나중에 통합 HTML 생성을 위해)
+            if FORMAT_HTML in formats:
+                # 차트 이미지 경로 준비
+                chart_filename = "chart_grade.png" if args.grade else "chart.png"
+                chart_path = os.path.join(repo_output_dir, chart_filename)
+                
+                # 주간 차트 경로 준비
+                weekly_chart_path = os.path.join(repo_output_dir, "weekly_activity.png") if args.weekly_chart else ''
+                
+                # 저장소별 데이터 저장
+                all_repo_html_data[repo_safe_name] = {
+                    'scores': repo_scores,
+                    'chart_path': chart_path,
+                    'weekly_chart_path': weekly_chart_path if args.weekly_chart else ''
+                }
+
             # 최종 통합 로그 출력
             log(f"{repo} 분석 결과({', '.join(results_saved)}) 저장 완료: {repo_output_dir}", force=True)    
+            
+            # HTML 보고서는 모든 저장소 처리 후에 한 번만 생성할 예정이므로 여기서는 생성하지 않음
 
             # 주차별 활동 차트생성
             if args.weekly_chart:
@@ -384,8 +415,8 @@ def main() -> None:
             overall_weekly_activity = defaultdict(lambda: {"pr": 0, "issue": 0})
             for repo in final_repositories:
                 log(f"분석 시작: {repo}", force=True)
-                
-                analyzer = RepoAnalyzer(repo, token=github_token, theme=args.theme)
+
+                analyzer = RepoAnalyzer(repo, theme=args.theme)
                 if args.weekly_chart:
                     analyzer.set_semester_start_date(semester_start_date)
 
@@ -399,7 +430,7 @@ def main() -> None:
                             week = int(week_str)
                             overall_weekly_activity[week]["pr"] += data.get("pr", 0)
                             overall_weekly_activity[week]["issue"] += data.get("issue", 0)
-            
+
             overall_output_dir = os.path.join(args.output, "overall")
             os.makedirs(overall_output_dir, exist_ok=True)
 
@@ -407,48 +438,82 @@ def main() -> None:
             output_handler.generate_weekly_chart(overall_weekly_activity, semester_start_date, weekly_chart_path)
 
         log("\n=== 전체 저장소 통합 분석 ===", force=True)
-        
+
         # 통합 분석을 위한 analyzer 생성
-        overall_analyzer = RepoAnalyzer("multiple_repos", token=github_token, theme=args.theme)
+        overall_analyzer = RepoAnalyzer("multiple_repos", theme=args.theme)
         overall_analyzer.participants = overall_participants
-        
+
         # 통합 점수 계산
-        overall_scores = overall_analyzer.calculate_scores(user_info)
-        
+        overall_scores = overall_analyzer.calculate_scores(user_info, min_contributions=args.min_contributions)
+
+        # 저장소별 사용자 점수 통합 데이터
+        user_scores = defaultdict(dict)
+        for repo_name, repo_scores in all_repo_scores.items():
+            for username, score_dict in repo_scores.items():
+                user_scores[username][repo_name] = score_dict["total"]
+        for username in user_scores:
+            user_scores[username]["total"] = sum(user_scores[username].values())
+
+        # 정렬
+        user_scores = defaultdict(dict, sorted(user_scores.items(), key=lambda x: x[1]['total'], reverse=True))
+        # rank 추가
+        current_rank = 1
+        prev_score = None
+
+        for i, (username, scores) in enumerate(user_scores.items()):
+            current_score = scores['total']
+            
+            # 동점자 처리
+            if prev_score is not None and current_score != prev_score:
+                current_rank = i + 1
+            
+            user_scores[username]['rank'] = current_rank
+            prev_score = current_score
+
         # 통합 결과 저장
         overall_output_dir = os.path.join(args.output, "overall")
         os.makedirs(overall_output_dir, exist_ok=True)
 
+        # 결과를 HTML 데이터에 추가 (순서 수정)
+        if FORMAT_HTML in formats:
+            all_repo_html_data["overall"] = {
+                'scores': overall_scores,
+                'chart_path': os.path.join(overall_output_dir, "ratio_chart.png")
+            }
+            all_repo_html_data["overall_repository"] = {
+                'scores': user_scores,
+                'chart_path': os.path.join(overall_output_dir, "overall_chart.png")
+            }
+
         results_saved = []
-        
-        # 1) CSV 테이블 저장
+        # CSV 저장
         if FORMAT_TABLE in formats:
-            table_path = os.path.join(overall_output_dir, "score.csv")
+            table_path = os.path.join(overall_output_dir, "ratio_score.csv")
             output_handler.generate_table(overall_scores, save_path=table_path)
             output_handler.generate_count_csv(overall_scores, save_path=table_path)
             if args.verbose:
                 log(f"[통합 저장소] CSV 파일 저장 완료: {table_path}", force=True)
             results_saved.append("CSV")
 
-        # 2) 텍스트 테이블 저장
+        # 텍스트 저장
         if FORMAT_TEXT in formats:
-            txt_path = os.path.join(overall_output_dir, "score.txt")
+            txt_path = os.path.join(overall_output_dir, "ratio_score.txt")
             output_handler.generate_text(overall_scores, txt_path)
             if args.verbose:
                 log(f"[통합 저장소] 텍스트 파일 저장 완료: {txt_path}", force=True)
             results_saved.append("TXT")
-        
-        # 3) 차트 이미지 저장
-        if FORMAT_CHART in formats:
-            chart_filename = "chart_grade.png" if args.grade else "chart.png"
+
+        # 차트 이미지 저장
+        if FORMAT_CHART in formats or FORMAT_HTML in formats:
+            chart_filename = "chart_grade.png" if args.grade else "ratio_chart.png"
             chart_path = os.path.join(overall_output_dir, chart_filename)
             output_handler.generate_chart(overall_scores, save_path=chart_path, show_grade=args.grade)
             if args.verbose:
                 log(f"[통합 저장소] 차트 이미지 저장 완료: {chart_path}", force=True)
             results_saved.append("Chart")
 
-        # 최종 통합 로그
         log(f"[통합 저장소] 분석 결과({', '.join(results_saved)}) 저장 완료: {overall_output_dir}", force=True)
+
 
     # 사용자별 저장소별 점수 CSV 만드는 함수
     def generate_overall_repository_csv(all_repo_scores, output_path):
@@ -474,53 +539,53 @@ def main() -> None:
         df = df.astype(int)
         df.reset_index(inplace=True)
         df = df[["name"] + existing_columns]
-        df = df.sort_values(by="total", ascending=False)
+        df['rank'] = df['total'].rank(method='min', ascending=False).astype(int)
+        for _, row in df.iterrows():
+            username = row['name']
+            user_scores[username]['rank'] = int(row['rank'])
+        df = df.sort_values(by='rank')
+        cols = ['rank'] + [col for col in df.columns if col != 'rank']
+        df = df[cols]
         df.to_csv(output_path, encoding="utf-8", index=False)
+        return user_scores
     
     if len(final_repositories) > 1:
         # 저장 경로 지정하고 생성
-        overall_repo_dir = os.path.join(args.output, "overall_repository")
-        os.makedirs(overall_repo_dir, exist_ok=True)
+        overall_repo_dir = os.path.join(args.output, "overall")
 
         results_saved = []
 
         overall_csv_path = os.path.join(overall_repo_dir, "overall_scores.csv")
-        generate_overall_repository_csv(all_repo_scores, overall_csv_path)
+        user_scores = generate_overall_repository_csv(all_repo_scores, overall_csv_path)
         if args.verbose:
             log(f"[📊 overall_repository] 저장소별 사용자 점수 CSV 저장 완료: {overall_csv_path}", force=True)
         results_saved.append("CSV")
 
         # 🔽 텍스트 파일 저장: overall_scores.txt
+        from prettytable import PrettyTable
+
         overall_txt_path = os.path.join(overall_repo_dir, "overall_scores.txt")
+        table = PrettyTable()
+        table.field_names = ["Rank", "Name"] + [repo.replace("/", "_") for repo in final_repositories] + ["Total"]
+
+        sorted_users = sorted(user_scores.items(), key=lambda x: x[1]["total"], reverse=True)
+
+        for username, score_dict in sorted_users:
+            row = [score_dict['rank'], username]
+            for repo in final_repositories:
+                repo_key = repo.replace("/", "_")
+                row.append(score_dict.get(repo_key, 0))
+            row.append(score_dict["total"])
+            table.add_row(row)
+
         with open(overall_txt_path, "w", encoding="utf-8") as f:
-            sorted_users = sorted(all_repo_scores.keys())
-            
-            # 사용자 점수 재구성 (user_scores: username → repo별 점수)
-            user_scores = defaultdict(dict)
-            for repo_name, repo_scores in all_repo_scores.items():
-                for username, score_dict in repo_scores.items():
-                    user_scores[username][repo_name] = score_dict["total"]
-
-            # 총점 계산 후 정렬
-            for username in user_scores:
-                user_scores[username]["total"] = sum(user_scores[username].values())
-
-            sorted_users = sorted(user_scores.items(), key=lambda x: x[1]["total"], reverse=True)
-
-            for username, score_dict in sorted_users:
-                f.write(f"📊 {username}\n")
-                f.write(f"총점: {score_dict['total']}점\n")
-                for repo in final_repositories:
-                    repo_key = repo.replace("/", "_")
-                    if repo_key in score_dict:
-                        f.write(f"{repo_key}: {score_dict[repo_key]}점\n")
-                f.write("\n")  # 사용자별 공백 줄
+            f.write(table.get_string())
         if args.verbose:
             log(f"[📊 overall_repository] 저장소별 사용자 점수 TXT 저장 완료: {overall_txt_path}", force=True)
         results_saved.append("TXT")
 
         # 📈 통합 차트 이미지 저장
-        chart_path = os.path.join(overall_repo_dir, "chart.png")
+        chart_path = os.path.join(overall_repo_dir, "overall_chart.png")
         output_handler.generate_repository_stacked_chart(user_scores, save_path=chart_path)
         if args.verbose:
             log(f"[📊 overall_repository] 누적 기여도 차트 저장 완료: {chart_path}", force=True)
@@ -542,6 +607,14 @@ def main() -> None:
             print()
         elif args.user:
             log(f"[INFO] 사용자 '{args.user}'의 점수가 통합 분석 결과에 없습니다.", force=True)
+    
+    # HTML 보고서 생성 (모든 저장소 처리 후 한 번만 실행)
+    if FORMAT_HTML in formats and all_repo_html_data:
+        log("HTML 보고서 생성 중...", force=True)
+        output_handler.generate_html_report(all_repo_html_data, args.output)
+        log("HTML 보고서 생성 완료", force=True)
+
+
 
 if __name__ == "__main__":
     main()

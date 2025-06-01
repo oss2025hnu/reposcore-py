@@ -8,10 +8,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: 리포지토리 체크아웃
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # 토큰 명시적 설정
+          # persist-credentials: false 제거!
 
       - name: Python 환경 설정
         uses: actions/setup-python@v5
@@ -23,15 +28,57 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+      
+      - name: pylint 코드 스타일 검사
+        run: |
+          pylint $(git ls-files '*.py')
+      
       - name: pytest를 사용한 테스트 실행
         run: |
           pytest tests --verbose --junitxml=test-results.xml
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      # Push, Pull request시 테스트를 시행하고 결과를 test-results.xml로 생성함
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 통일
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: test-results.xml
+
+      - name: README.md 자동 생성 
+        run: |
+          python scripts/generate_readme.py
+
+      - name: README 처리 (PR/Push 구분)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR 환경 - README 검증만 수행"
+            if ! git diff --quiet README.md; then
+              echo "README 변경사항 발견:"
+              git diff README.md
+              echo "PR 머지 후 자동으로 README가 업데이트됩니다."
+            else
+              echo "README 변경사항 없음"
+            fi
+            
+          elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.actor }}" != "github-actions[bot]" ]; then
+            echo "Push 이벤트 - README 커밋 및 푸시 수행"
+            
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add README.md
+            
+            if ! git diff --cached --quiet; then
+              echo "README 변경 감지 - 커밋 실행"
+              git commit -m "docs: 자동 생성된 README 갱신 [skip ci]"
+              git push origin "${{ github.ref_name }}"
+              echo "README 업데이트 완료"
+            else
+              echo "README 변경사항 없음 - 커밋 생략"
+            fi
+          else
+            echo "워크플로우 수동 실행 또는 봇 실행 - README 처리 생략"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

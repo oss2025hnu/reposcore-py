@@ -22,7 +22,7 @@ make requirements
 **⚠️ 반드시 저장소 최상위 디렉토리에서 실행해야 합니다. (python -m reposcore 명령은 상대 경로 기준으로 동작합니다.)**
 
 ```
-usage: python -m reposcore [-h] [-v] [owner/repo ...] [--output dir_name] [--format {table, text, chart, all}] [--check-limit] [--user-info path]
+usage: python -m reposcore [-h] [-v] [owner/repo ...] [--output dir_name] [--format {table, text, chart, html, all}] [--check-limit] [--user-info path]
 
 오픈 소스 수업용 레포지토리의 기여도를 분석하는 CLI 도구
 
@@ -34,12 +34,13 @@ options:
   -h, --help            도움말 표시 후 종료
   -v, --verbose         자세한 로그를 출력합니다.
   --output dir_name     분석 결과를 저장할 출력 디렉토리 (기본값: 'results')
-  --format {table, text, chart, all} [{table, text, chart, all} ...]
+  --format {table, text, chart, html, all} [{table, text, chart, html, all} ...]
                         결과 출력 형식 선택 (복수 선택 가능, 예: --format table chart)
                         (기본값:'all')
   --grade               차트에 등급 표시
   --use-cache           participants 데이터를 캐시에서 불러올지 여부 (기본: API를 통해 새로 수집)
-  --token TOKEN         API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰
+  --token TOKEN         API 요청 제한 해제를 위한 깃허브 개인 액세스 토큰 (환경변수 GITHUB_TOKEN으로도
+                        설정 가능)
   --check-limit         현재 GitHub API 요청 가능 횟수와 전체 한도를 확인합니다.
   --user-info USER_INFO
                         사용자 정보 파일의 경로
@@ -49,6 +50,8 @@ options:
   --weekly-chart        주차별 PR/이슈 활동량 차트를 생성합니다.
   --semester-start SEMESTER_START
                         학기 시작일 (형식: YYYY-MM-DD, 예: 2025-03-04)
+  --min-contributions MIN_CONTRIBUTIONS
+                        최소 기여 점수가 지정 값 이상인 사용자만 결과에 포함합니다.(기본값 : 1)
 ```
 ## Clean results directory
 
@@ -66,13 +69,7 @@ make clean
 python -m reposcore oss2025hnu/reposcore-py --format all
 ```
 
-분석 결과는 `results/사용자명_저장소명/` 경로에 아래와 같이 저장됩니다:
-
-- `score.csv`: 기여자별 점수 테이블 (CSV 형식)
-- `score.txt`: 기여자별 점수 요약 텍스트
-- `chart.png`: 기여도 시각화 차트
-
----
+분석 결과 파일들은 results/사용자명_저장소명/ 경로에 저장됩니다.
 
 ### 여러 저장소 통합 분석
 
@@ -97,6 +94,15 @@ python -m reposcore oss2025hnu/reposcore-py oss2025hnu/reposcore-js oss2025hnu/r
 python -m reposcore <소유자/저장소> --semester-start YYYY-MM-DD --weekly-chart
 ```
 
+### py저장소 메인 모듈의 의미와 역할
+해당 프로젝트의 핵심 기능이 구현되어 있는 중심적인 파일입니다.
+일반적으로 `__main__.py` 이나 저장소 이름과 같은 파일로 구성되며, 프로그램을 실행할때 전체 흐름을 제어하는 중심 모듈 역할을 합니다.
+이 모듈은 다음 역할을 수행합니다:
+ - 애플리케이션 진입점 제공
+
+ - 주요 기능과 모듈 연결 및 실행
+
+ - 초기 설정 및 환경 초기화 작업 수행
 
 ## Score Formula
 아래는 PR 개수와 이슈 개수의 비율에 따라 점수로 인정가능한 최대 개수를 구하고 각 배점에 따라 최종 점수를 산출하는 공식이다.
@@ -127,6 +133,20 @@ $I_d^* = I_{\text{valid}} - I_{fb}^* \quad$ 남은 개수에서 문서 이슈 �
 최종 점수 계산 공식:  
 $S = 3P_{fb}^* + 2P_d^* + 1P_t^* + 2I_{fb}^* + 1I_d^*$
 
+## Tests 디렉토리 안내
+
+테스트 코드를 모아둔 디렉토리입니다. 주요 파일은 다음과 같습니다:
+
+- `test_analyzer.py`: `RepoAnalyzer` 클래스의 점수 계산 로직 및 결과 출력 처리를 검증하는 단위 테스트입니다.
+- `test_decorators.py`: `retry` 데코레이터의 재시도(retry) 동작을 검증하는 pytest 기반 단위 테스트입니다.
+- `test_main.py`: CLI 엔트리포인트(`-m reposcore`)의 주요 옵션(예: `--help`) 동작을 확인하는 통합 테스트입니다.
+
+테스트는 `pytest`로 실행할 수 있으며, 다음 명령어로 전체 테스트를 실행합니다:
+
+```bash
+pytest tests/
+```
+
 ## 📚 가이드 문서 모음
 
 ### ⚙️ 프로젝트 시작
@@ -156,6 +176,8 @@ $S = 3P_{fb}^* + 2P_d^* + 1P_t^* + 2I_{fb}^* + 1I_d^*$
   - GitHub API 사용 방법.
 - [토큰 생성 방법](docs/github-token-guide.md)
   - GitHub 토큰 생성 및 설정.
+- [환경변수로 토큰 설정하기](docs/github-token-env-guide.md)  
+  - GITHUB_TOKEN 환경변수 설정을 통해 토큰을 깔끔하게 입력하는 방법.
 - [cherry-pick 이용 가이드](docs/cherry-pick_guide.md)
   - cherry-pick 사용방법.
 
