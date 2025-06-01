@@ -87,7 +87,8 @@ python -m reposcore oss2025hnu/reposcore-py oss2025hnu/reposcore-js oss2025hnu/r
   - `score.csv`: 전체 통합 기여자 점수 테이블
   - `score.txt`: 전체 기여자 점수 요약 텍스트
   - `chart.png`: 통합 기여도 시각화 차트
-  
+- 통합 분석 결과에는 활동별 기여 비율(ratio_score)이 포함되어 참여자의 기여 유형을 세부적으로 파악할 수 있습니다.
+
 ---
 
 ### 학기 시작일 기준 주차별 활동량 시각화
