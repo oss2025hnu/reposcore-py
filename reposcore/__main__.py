@@ -137,6 +137,11 @@ def parse_arguments() -> argparse.Namespace:
         default=1,
         help="최소 기여 점수가 지정 값 이상인 사용자만 결과에 포함합니다.(기본값 : 1)"
     )
+    parser.add_argument(
+    "--dry-run",
+    action="store_true",
+    help="실제 작업 없이 시뮬레이션 정보만 출력합니다."
+    )
     return parser.parse_args()
 
 args = parse_arguments()
@@ -276,6 +281,7 @@ def main() -> None:
 
         analyzer = RepoAnalyzer(repo, theme=args.theme)
         output_handler = OutputHandler(theme=args.theme)
+
         if args.weekly_chart:
             if not args.semester_start:
                 logging.error("❌ --weekly-chart 사용 시 --semester-start 날짜를 반드시 지정해야 합니다.")
@@ -340,6 +346,15 @@ def main() -> None:
             formats = set(args.format)
             if FORMAT_ALL in formats:
                 formats = {FORMAT_TABLE, FORMAT_TEXT, FORMAT_CHART, FORMAT_HTML}
+
+            # dry-run option
+            if args.dry_run:
+                print(f"[DRY-RUN] 저장소: {repo}")
+                print(f"[DRY-RUN] 캐시 사용 여부: {'예' if args.use_cache else '아니오'}")
+                print(f"[DRY-RUN] API 호출 여부: {'예정' if not args.use_cache else '스킵 가능'}")
+                print(f"[DRY-RUN] 캐시 경로: {cache_path}")
+                print(f"[DRY-RUN] 예상 출력 디렉토리: {os.path.join(args.output, repo.replace('/', '_'))}")
+                continue
 
             # 저장소별 폴더 생성 (owner/repo -> owner_repo)
             repo_safe_name = repo.replace('/', '_')
@@ -609,7 +624,7 @@ def main() -> None:
             log(f"[INFO] 사용자 '{args.user}'의 점수가 통합 분석 결과에 없습니다.", force=True)
     
     # HTML 보고서 생성 (모든 저장소 처리 후 한 번만 실행)
-    if FORMAT_HTML in formats and all_repo_html_data:
+    if not args.dry_run and FORMAT_HTML in formats and all_repo_html_data:
         log("HTML 보고서 생성 중...", force=True)
         output_handler.generate_html_report(all_repo_html_data, args.output)
         log("HTML 보고서 생성 완료", force=True)

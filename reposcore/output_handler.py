@@ -45,9 +45,10 @@ class OutputHandler:
         0: 'F'
     }
 
-    def __init__(self, theme: str = 'default'):
+    def __init__(self, theme: str = 'default', dry_run: bool = False):
         self.theme_manager = ThemeManager()  # 테마 매니저 초기화
         self.set_theme(theme)                # 테마 설정
+        self.dry_run = dry_run              
 
     def set_theme(self, theme_name: str) -> None:
         if theme_name in self.theme_manager.themes:
@@ -86,6 +87,9 @@ class OutputHandler:
 
     def generate_table(self, scores: dict[str, dict[str, float]], save_path) -> None:
         """결과를 테이블 형태로 출력"""
+        if self.dry_run:
+            print(f"[DRY-RUN] 테이블 저장 생략 (예상 경로: {save_path})")
+            return
         timestamp = self.get_kst_timestamp()
         table = PrettyTable()
         table.field_names = ["참여자", "총점", "등급", "PR(기능/버그)", "PR(문서)", "PR(오타)", "이슈(기능/버그)", "이슈(문서)"]
