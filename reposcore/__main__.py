@@ -29,6 +29,7 @@ VALID_FORMATS_DISPLAY = ", ".join(VALID_FORMATS)
 # 친절한 오류 메시지를 출력할 ArgumentParser 클래스
 class FriendlyArgumentParser(argparse.ArgumentParser):
     def error(self, message: str) -> None:
+        print("저장소를 지정해주세요")
         if '--format' in message:
             # --format 옵션에서만 오류 메시지를 사용자 정의
             logging.error(f"❌ 인자 오류: {message}")
