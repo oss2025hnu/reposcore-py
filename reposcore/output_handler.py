@@ -45,9 +45,10 @@ class OutputHandler:
         0: 'F'
     }
 
-    def __init__(self, theme: str = 'default'):
+    def __init__(self, theme: str = 'default', dry_run: bool = False):
         self.theme_manager = ThemeManager()  # 테마 매니저 초기화
         self.set_theme(theme)                # 테마 설정
+        self.dry_run = dry_run              
 
     def set_theme(self, theme_name: str) -> None:
         if theme_name in self.theme_manager.themes:
@@ -86,6 +87,9 @@ class OutputHandler:
 
     def generate_table(self, scores: dict[str, dict[str, float]], save_path) -> None:
         """결과를 테이블 형태로 출력"""
+        if self.dry_run:
+            print(f"[DRY-RUN] 테이블 저장 생략 (예상 경로: {save_path})")
+            return
         timestamp = self.get_kst_timestamp()
         table = PrettyTable()
         table.field_names = ["참여자", "총점", "등급", "PR(기능/버그)", "PR(문서)", "PR(오타)", "이슈(기능/버그)", "이슈(문서)"]
@@ -145,15 +149,15 @@ class OutputHandler:
         for rank, (name, score) in enumerate(scores.items(), start=1):
             grade = self._calculate_grade(score["total"])
             table.add_row([
-                f"{int(score['rank'])}",
+                int(score['rank']),
                 name,
-                f"{score['total']:5.1f}",
+                int(score['total']),
                 grade,
-                f"{score['feat/bug PR']:5.1f}",
-                f"{score['document PR']:5.1f}",
-                f"{score['typo PR']:5.1f}",
-                f"{score['feat/bug issue']:5.1f}",
-                f"{score['document issue']:5.1f}",
+                int(score['feat/bug PR']),
+                int(score['document PR']),
+                int(score['typo PR']),
+                int(score['feat/bug issue']),
+                int(score['document issue']),
             ])
         
         # 평균, 최고점, 최저점
@@ -515,8 +519,13 @@ class OutputHandler:
             rel_weekly_chart_path = os.path.join(repo_name, os.path.basename(weekly_chart_path)) if weekly_chart_path else ''
 
             # CSV 다운로드 버튼 추가
-            csv_filename = "overall_scores.csv" if repo_name == "overall_repository" else "score.csv"
-            csv_path = f"{repo_name}/{csv_filename}"
+            if repo_name == "overall":
+                csv_path = "overall/ratio_score.csv"
+            elif repo_name == "overall_repository":
+                csv_path = "overall/overall_scores.csv"
+            else:
+                csv_path = f"{repo_name}/score.csv"
+
             download_button = f"""
             <div class="text-end mt-2 mb-3">
                 <a href="{csv_path}" download class="btn btn-outline-primary">Download Score CSV</a>
