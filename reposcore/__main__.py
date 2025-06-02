@@ -194,6 +194,9 @@ def main() -> None:
 
     common_utils.is_verbose = args.verbose
     
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     # 토큰 처리 단순화
     if args.token:
         if args.token == '-':
