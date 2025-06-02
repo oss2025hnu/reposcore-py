@@ -1,10 +1,13 @@
-from .retry_decorator import retry
-import re
-import sys
-import time
-import requests
 import logging
 import os
+import re
+import sys
+
+import requests
+
+from .retry_decorator import retry
+
+logger = logging.getLogger(__name__)
 
 def validate_repo_format(repo: str) -> bool:
     pattern = r'^[\w\-]+/[\w\-]+$'
@@ -26,7 +29,7 @@ def validate_token() -> None:
     
     response = requests.get("https://api.github.com/user", headers=headers)
     if response.status_code != 200:
-        logging.error('❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요.')
+        logger.error('❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요.')
         sys.exit(1)
 
 def check_github_repo_exists(repo: str) -> bool:
@@ -45,12 +48,12 @@ def check_github_repo_exists(repo: str) -> bool:
     if response.status_code == 200:
         return True
     elif response.status_code == 403:
-        logging.warning("⚠️ GitHub API 요청 실패: 403 (요청 횟수 초과 또는 인증 오류)")
-        logging.info("ℹ️ 해결 방법: --token 옵션 또는 GITHUB_TOKEN 환경 변수 사용")
+        logger.warning("⚠️ GitHub API 요청 실패: 403 (요청 횟수 초과 또는 인증 오류)")
+        logger.info("ℹ️ 해결 방법: --token 옵션 또는 GITHUB_TOKEN 환경 변수 사용")
     elif response.status_code == 404:
-        logging.warning(f"⚠️ 저장소 '{repo}'가 존재하지 않습니다.")
+        logger.warning(f"⚠️ 저장소 '{repo}'가 존재하지 않습니다.")
     else:
-        logging.warning(f"⚠️ 요청 실패: HTTP 상태 코드 {response.status_code}")
+        logger.warning(f"⚠️ 요청 실패: HTTP 상태 코드 {response.status_code}")
 
     return False
 
@@ -70,9 +73,9 @@ def check_rate_limit() -> None:
         core = data.get("resources", {}).get("core", {})
         remaining = core.get("remaining", "N/A")
         limit = core.get("limit", "N/A")
-        logging.info(f"GitHub API 요청 가능 횟수: {remaining} / {limit}")
+        logger.info(f"GitHub API 요청 가능 횟수: {remaining} / {limit}")
     else:
-        logging.error(f"API 요청 제한 정보를 가져오는데 실패했습니다 (status code: {response.status_code}).")
+        logger.error(f"API 요청 제한 정보를 가져오는데 실패했습니다 (status code: {response.status_code}).")
 
 @retry(max_retries=3, retry_delay=1.0)
 def retry_request(

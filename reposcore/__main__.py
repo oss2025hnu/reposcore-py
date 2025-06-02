@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 
 import argparse
-import sys
-import os
-import requests
-from datetime import datetime
 import json
-import logging
 from collections import defaultdict
+from datetime import datetime
+
 import pandas as pd
 
-from .common_utils import *
-from .github_utils import *
 from .analyzer import RepoAnalyzer
+from .github_utils import *
 from .output_handler import OutputHandler
-from . import common_utils
+
+import logging
+
+# logging 모듈 기본 설정 (analyzer.py와 동일한 설정)
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.INFO,
+    format='[%(asctime)s] [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # 포맷 상수
 FORMAT_TABLE = "table"
@@ -31,8 +37,8 @@ class FriendlyArgumentParser(argparse.ArgumentParser):
     def error(self, message: str) -> None:
         if '--format' in message:
             # --format 옵션에서만 오류 메시지를 사용자 정의
-            logging.error(f"❌ 인자 오류: {message}")
-            logging.error(f"사용 가능한 --format 값: {VALID_FORMATS_DISPLAY}")
+            logger.error(f"❌ 인자 오류: {message}")
+            logger.error(f"사용 가능한 --format 값: {VALID_FORMATS_DISPLAY}")
         else:
             super().error(message)
         sys.exit(2)
@@ -194,11 +200,9 @@ def main() -> None:
 
     # repository가 없으면 에러
     if not args.repository:
-        logging.error("❌ 저장소를 지정해주세요.")
+        logger.error("❌ 저장소를 지정해주세요.")
         sys.exit(1)
 
-    common_utils.is_verbose = args.verbose
-    
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
@@ -226,14 +230,14 @@ def main() -> None:
     if args.user_info:
         # 1) 파일 존재 여부 확인
         if not os.path.isfile(args.user_info):
-            logging.error("❌ 사용자 정보 파일을 찾을 수 없습니다.")
+            logger.error("❌ 사용자 정보 파일을 찾을 수 없습니다.")
             sys.exit(1)
         # 2) JSON 문법 오류 확인
         try:
             with open(args.user_info, "r", encoding="utf-8") as f:
                 user_info = json.load(f)
         except json.JSONDecodeError:
-            logging.error("❌ 사용자 정보 파일이 올바른 JSON 형식이 아닙니다.")
+            logger.error("❌ 사용자 정보 파일이 올바른 JSON 형식이 아닙니다.")
             sys.exit(1)
     else:
         user_info = None
@@ -247,13 +251,13 @@ def main() -> None:
     # 각 저장소 유효성 검사 (먼저 다 검사)
     for repo in final_repositories:
         if not validate_repo_format(repo):
-            logging.error(f"오류: 저장소 '{repo}'는 'owner/repo' 형식으로 입력해야 합니다. 예) 'oss2025hnu/reposcore-py'")
+            logger.error(f"오류: 저장소 '{repo}'는 'owner/repo' 형식으로 입력해야 합니다. 예) 'oss2025hnu/reposcore-py'")
             sys.exit(1)
         if not check_github_repo_exists(repo):
-            logging.warning(f"입력한 저장소 '{repo}'가 깃허브에 존재하지 않을 수 있음.")
+            logger.warning(f"입력한 저장소 '{repo}'가 깃허브에 존재하지 않을 수 있음.")
             sys.exit(1)
 
-    log(f"저장소 분석 시작: {', '.join(final_repositories)}", force=True)
+    logger.info(f"저장소 분석 시작: {', '.join(final_repositories)}")
 
     overall_participants = {}
     all_repo_scores = {}
@@ -272,12 +276,12 @@ def main() -> None:
     semester_start_date = None
     if args.weekly_chart:
         if not args.semester_start:
-            logging.error("❌ --weekly-chart 사용 시 --semester-start 날짜를 반드시 지정해야 합니다.")
+            logger.error("❌ --weekly-chart 사용 시 --semester-start 날짜를 반드시 지정해야 합니다.")
             sys.exit(1)
         try:
             semester_start_date = datetime.strptime(args.semester_start, "%Y-%m-%d").date()
         except ValueError:
-            logging.error("❌ 학기 시작일 형식이 잘못되었습니다. YYYY-MM-DD 형식으로 입력해 주세요.")
+            logger.error("❌ 학기 시작일 형식이 잘못되었습니다. YYYY-MM-DD 형식으로 입력해 주세요.")
             sys.exit(1)
 
     for repo in tqdm(final_repositories, desc="저장소 분석 진행"):
@@ -287,13 +291,13 @@ def main() -> None:
 
         if args.weekly_chart:
             if not args.semester_start:
-                logging.error("❌ --weekly-chart 사용 시 --semester-start 날짜를 반드시 지정해야 합니다.")
+                logger.error("❌ --weekly-chart 사용 시 --semester-start 날짜를 반드시 지정해야 합니다.")
                 sys.exit(1)
             try:
                 semester_start_date = datetime.strptime(args.semester_start, "%Y-%m-%d").date()
                 analyzer.set_semester_start_date(semester_start_date)
             except ValueError:
-                logging.error("❌ 학기 시작일 형식이 잘못되었습니다. YYYY-MM-DD 형식으로 입력해 주세요.")
+                logger.error("❌ 학기 시작일 형식이 잘못되었습니다. YYYY-MM-DD 형식으로 입력해 주세요.")
                 sys.exit(1)
 
         # 저장소별 캐시 파일 생성 (예: cache_oss2025hnu_reposcore-py.json)
@@ -305,7 +309,7 @@ def main() -> None:
         cache_update_required = os.path.exists(cache_path) and analyzer.is_cache_update_required(cache_path)
 
         if args.use_cache and os.path.exists(cache_path) and not cache_update_required:
-            log(f"✅ 캐시 파일({cache_file_name})이 존재합니다. 캐시에서 데이터를 불러옵니다.", force=True)
+            logger.info(f"✅ 캐시 파일({cache_file_name})이 존재합니다. 캐시에서 데이터를 불러옵니다.")
             with open(cache_path, "r", encoding="utf-8") as f:
                 cached_json = json.load(f)
                 analyzer.participants = cached_json['participants']
@@ -313,14 +317,14 @@ def main() -> None:
         else:
             if args.use_cache and cache_update_required:
                 if args.verbose:
-                    log(f"🔄 리포지토리의 최근 이슈 생성 시간이 캐시파일의 생성 시간보다 최근입니다. GitHub API로 데이터를 수집합니다.", force=True)
+                    logger.info(f"🔄 리포지토리의 최근 이슈 생성 시간이 캐시파일의 생성 시간보다 최근입니다. GitHub API로 데이터를 수집합니다.")
             else:
                 if args.verbose:
-                    log(f"�� 캐시를 사용하지 않거나 캐시 파일({cache_file_name})이 없습니다. GitHub API로 데이터를 수집합니다.", force=True)
+                    logger.info(f"�� 캐시를 사용하지 않거나 캐시 파일({cache_file_name})이 없습니다. GitHub API로 데이터를 수집합니다.")
             analyzer.collect_PRs_and_issues()
             if not getattr(analyzer, "_data_collected", True):
-                logging.error("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 종료합니다.")
-                logging.error("ℹ️ 인증 없이 실행한 경우 요청 횟수 제한(403)일 수 있습니다. --token 옵션을 사용해보세요.")
+                logger.error("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 종료합니다.")
+                logger.error("ℹ️ 인증 없이 실행한 경우 요청 횟수 제한(403)일 수 있습니다. --token 옵션을 사용해보세요.")
                 sys.exit(1)
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump({'update_time':analyzer.previous_create_at, 'participants': analyzer.participants, 'weekly_activity': dict(analyzer.weekly_activity)}, f, indent=2, ensure_ascii=False)
@@ -339,11 +343,11 @@ def main() -> None:
                 sorted_users = list(repo_scores.keys())
                 user_rank = sorted_users.index(user_lookup_name) + 1
                 user_score = repo_scores[user_lookup_name]["total"]
-                log(f"[INFO] 사용자: {user_lookup_name}", force=True)
-                log(f"[INFO] 총점: {user_score:.2f}점", force=True)
-                log(f"[INFO] 등수: {user_rank}등 (전체 {len(sorted_users)}명 중)", force=True)
+                logger.info(f"[INFO] 사용자: {user_lookup_name}")
+                logger.info(f"[INFO] 총점: {user_score:.2f}점")
+                logger.info(f"[INFO] 등수: {user_rank}등 (전체 {len(sorted_users)}명 중)")
             elif args.user and len(final_repositories) == 1:
-                log(f"[INFO] 사용자 '{args.user}'의 점수가 계산된 결과에 없습니다.", force=True)
+                logger.info(f"[INFO] 사용자 '{args.user}'의 점수가 계산된 결과에 없습니다.")
 
             # 출력 형식
             formats = set(args.format)
@@ -373,7 +377,7 @@ def main() -> None:
                 output_handler.generate_table(repo_scores, save_path=table_path)
                 output_handler.generate_count_csv(repo_scores, save_path=table_path)
                 if args.verbose:
-                    log(f"CSV 파일 저장 완료: {table_path}", force=True)
+                    logger.info(f"CSV 파일 저장 완료: {table_path}")
                 results_saved.append("CSV")
 
             # 2) 텍스트 테이블 저장
@@ -381,7 +385,7 @@ def main() -> None:
                 txt_path = os.path.join(repo_output_dir, "score.txt")
                 output_handler.generate_text(repo_scores, txt_path)
                 if args.verbose:
-                    log(f"텍스트 파일 저장 완료: {txt_path}", force=True)
+                    logger.info(f"텍스트 파일 저장 완료: {txt_path}")
                 results_saved.append("TXT")
 
             # 3) 차트 이미지 저장
@@ -390,7 +394,7 @@ def main() -> None:
                 chart_path = os.path.join(repo_output_dir, chart_filename)
                 output_handler.generate_chart(repo_scores, save_path=chart_path, show_grade=args.grade)
                 if args.verbose:
-                    log(f"차트 이미지 저장 완료: {chart_path}", force=True)
+                    logger.info(f"차트 이미지 저장 완료: {chart_path}")
                 results_saved.append("Chart")
 
             # HTML 보고서 생성을 위한 데이터 준비 (나중에 통합 HTML 생성을 위해)
@@ -410,7 +414,7 @@ def main() -> None:
                 }
 
             # 최종 통합 로그 출력
-            log(f"{repo} 분석 결과({', '.join(results_saved)}) 저장 완료: {repo_output_dir}", force=True)    
+            logger.info(f"{repo} 분석 결과({', '.join(results_saved)}) 저장 완료: {repo_output_dir}")
             
             # HTML 보고서는 모든 저장소 처리 후에 한 번만 생성할 예정이므로 여기서는 생성하지 않음
 
@@ -424,7 +428,7 @@ def main() -> None:
             overall_participants = merge_participants(overall_participants, analyzer.participants)
 
         except Exception as e:
-            logging.error(f"❌ 저장소 '{repo}' 분석 중 오류 발생: {str(e)}")
+            logger.error(f"❌ 저장소 '{repo}' 분석 중 오류 발생: {str(e)}")
             continue
 
     # 전체 저장소 통합 분석
@@ -432,7 +436,7 @@ def main() -> None:
         if args.weekly_chart:
             overall_weekly_activity = defaultdict(lambda: {"pr": 0, "issue": 0})
             for repo in final_repositories:
-                log(f"분석 시작: {repo}", force=True)
+                logger.info(f"분석 시작: {repo}")
 
                 analyzer = RepoAnalyzer(repo, theme=args.theme)
                 if args.weekly_chart:
@@ -455,7 +459,7 @@ def main() -> None:
             weekly_chart_path = os.path.join(overall_output_dir, "weekly_activity.png")
             output_handler.generate_weekly_chart(overall_weekly_activity, semester_start_date, weekly_chart_path)
 
-        log("\n=== 전체 저장소 통합 분석 ===", force=True)
+        logger.info("\n=== 전체 저장소 통합 분석 ===")
 
         # 통합 분석을 위한 analyzer 생성
         overall_analyzer = RepoAnalyzer("multiple_repos", theme=args.theme)
@@ -510,7 +514,7 @@ def main() -> None:
             output_handler.generate_table(overall_scores, save_path=table_path)
             output_handler.generate_count_csv(overall_scores, save_path=table_path)
             if args.verbose:
-                log(f"[통합 저장소] CSV 파일 저장 완료: {table_path}", force=True)
+                logger.info(f"[통합 저장소] CSV 파일 저장 완료: {table_path}")
             results_saved.append("CSV")
 
         # 텍스트 저장
@@ -518,7 +522,7 @@ def main() -> None:
             txt_path = os.path.join(overall_output_dir, "ratio_score.txt")
             output_handler.generate_text(overall_scores, txt_path)
             if args.verbose:
-                log(f"[통합 저장소] 텍스트 파일 저장 완료: {txt_path}", force=True)
+                logger.info(f"[통합 저장소] 텍스트 파일 저장 완료: {txt_path}")
             results_saved.append("TXT")
 
         # 차트 이미지 저장
@@ -527,10 +531,10 @@ def main() -> None:
             chart_path = os.path.join(overall_output_dir, chart_filename)
             output_handler.generate_chart(overall_scores, save_path=chart_path, show_grade=args.grade)
             if args.verbose:
-                log(f"[통합 저장소] 차트 이미지 저장 완료: {chart_path}", force=True)
+                logger.info(f"[통합 저장소] 차트 이미지 저장 완료: {chart_path}")
             results_saved.append("Chart")
 
-        log(f"[통합 저장소] 분석 결과({', '.join(results_saved)}) 저장 완료: {overall_output_dir}", force=True)
+        logger.info(f"[통합 저장소] 분석 결과({', '.join(results_saved)}) 저장 완료: {overall_output_dir}")
 
 
     # 사용자별 저장소별 점수 CSV 만드는 함수
@@ -576,7 +580,7 @@ def main() -> None:
         overall_csv_path = os.path.join(overall_repo_dir, "overall_scores.csv")
         user_scores = generate_overall_repository_csv(all_repo_scores, overall_csv_path)
         if args.verbose:
-            log(f"[📊 overall_repository] 저장소별 사용자 점수 CSV 저장 완료: {overall_csv_path}", force=True)
+            logger.info(f"[📊 overall_repository] 저장소별 사용자 점수 CSV 저장 완료: {overall_csv_path}")
         results_saved.append("CSV")
 
         # 🔽 텍스트 파일 저장: overall_scores.txt
@@ -599,18 +603,18 @@ def main() -> None:
         with open(overall_txt_path, "w", encoding="utf-8") as f:
             f.write(table.get_string())
         if args.verbose:
-            log(f"[📊 overall_repository] 저장소별 사용자 점수 TXT 저장 완료: {overall_txt_path}", force=True)
+            logger.info(f"[📊 overall_repository] 저장소별 사용자 점수 TXT 저장 완료: {overall_txt_path}")
         results_saved.append("TXT")
 
         # 📈 통합 차트 이미지 저장
         chart_path = os.path.join(overall_repo_dir, "overall_chart.png")
         output_handler.generate_repository_stacked_chart(user_scores, save_path=chart_path)
         if args.verbose:
-            log(f"[📊 overall_repository] 누적 기여도 차트 저장 완료: {chart_path}", force=True)
+            logger.info(f"[📊 overall_repository] 누적 기여도 차트 저장 완료: {chart_path}")
         results_saved.append("Chart")
 
-        log(f"[📊 overall_repository] 분석 결과({', '.join(results_saved)}) 저장 완료: {overall_repo_dir}", force=True)
-        log(f"[📊 overall_repository] 통합 저장소 기준 사용자별 기여도는 '{overall_repo_dir}' 폴더 내 결과 파일에서 확인할 수 있습니다.", force=True)
+        logger.info(f"[📊 overall_repository] 분석 결과({', '.join(results_saved)}) 저장 완료: {overall_repo_dir}")
+        logger.info(f"[📊 overall_repository] 통합 저장소 기준 사용자별 기여도는 '{overall_repo_dir}' 폴더 내 결과 파일에서 확인할 수 있습니다.")
 
         # --user 옵션이 지정된 경우 통합 점수에서 출력
         user_lookup_name = user_info.get(args.user, args.user) if args.user and user_info else args.user
@@ -619,18 +623,18 @@ def main() -> None:
             user_rank = sorted_users.index(user_lookup_name) + 1
             user_score = overall_scores[user_lookup_name]["total"]
             print()
-            log(f"[INFO] 사용자: {user_lookup_name}", force=True)
-            log(f"[INFO] 총점: {user_score:.2f}점", force=True)
-            log(f"[INFO] 등수: {user_rank}등 (전체 {len(sorted_users)}명 중)", force=True)
+            logger.info(f"[INFO] 사용자: {user_lookup_name}")
+            logger.info(f"[INFO] 총점: {user_score:.2f}점")
+            logger.info(f"[INFO] 등수: {user_rank}등 (전체 {len(sorted_users)}명 중)")
             print()
         elif args.user:
-            log(f"[INFO] 사용자 '{args.user}'의 점수가 통합 분석 결과에 없습니다.", force=True)
+            logger.info(f"[INFO] 사용자 '{args.user}'의 점수가 통합 분석 결과에 없습니다.")
     
     # HTML 보고서 생성 (모든 저장소 처리 후 한 번만 실행)
     if not args.dry_run and FORMAT_HTML in formats and all_repo_html_data:
-        log("HTML 보고서 생성 중...", force=True)
+        logger.info("HTML 보고서 생성 중...")
         output_handler.generate_html_report(all_repo_html_data, args.output)
-        log("HTML 보고서 생성 완료", force=True)
+        logger.info("HTML 보고서 생성 완료")
 
 
 
