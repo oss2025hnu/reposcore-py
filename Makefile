@@ -83,6 +83,9 @@ README.md: template_README.md scripts/generate_readme.py reposcore/__main__.py
 # PR 전에 자동으로 README 검증
 pre-commit: readme
 
+zip:
+	zip results.zip -r results/
+
 # 불필요한 파일 정리
 clean:
 	@if [ -d "$(VENV)" ]; then \
