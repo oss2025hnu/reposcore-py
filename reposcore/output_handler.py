@@ -515,8 +515,13 @@ class OutputHandler:
             rel_weekly_chart_path = os.path.join(repo_name, os.path.basename(weekly_chart_path)) if weekly_chart_path else ''
 
             # CSV 다운로드 버튼 추가
-            csv_filename = "overall_scores.csv" if repo_name == "overall_repository" else "score.csv"
-            csv_path = f"{repo_name}/{csv_filename}"
+            if repo_name == "overall":
+                csv_path = "overall/ratio_score.csv"
+            elif repo_name == "overall_repository":
+                csv_path = "overall/overall_scores.csv"
+            else:
+                csv_path = f"{repo_name}/score.csv"
+
             download_button = f"""
             <div class="text-end mt-2 mb-3">
                 <a href="{csv_path}" download class="btn btn-outline-primary">Download Score CSV</a>
