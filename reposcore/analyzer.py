@@ -51,10 +51,11 @@ class RepoAnalyzer:
     # 사용자 제외 목록
     EXCLUDED_USERS = {"kyahnu", "kyagrd"}
 
-    def __init__(self, repo_path: str, theme: str = 'default'):  # token 파라미터 제거
+    def __init__(self, repo_path: str, theme: str = 'default', dry_run: bool = False):  # token 파라미터 제거 
         # 테스트용 저장소나 통합 분석용 저장소 식별
         self._is_test_repo = repo_path == "dummy/repo"
         self._is_multiple_repos = repo_path == "multiple_repos"
+        self.dry_run = dry_run
         
         # 테스트용이나 통합 분석용이 아닌 경우에만 실제 저장소 존재 여부 확인
         if not self._is_test_repo and not self._is_multiple_repos:
@@ -130,6 +131,9 @@ class RepoAnalyzer:
         PR의 경우, 실제로 병합된 경우만 점수에 반영.
         이슈는 open / reopened / completed 상태만 점수에 반영합니다.
         """
+        if self.dry_run:
+            log(f"[DRY-RUN] '{self.repo_path}'에 대해 PR/이슈 수집을 생략합니다.", force=True)
+            return
         # 테스트용 저장소나 통합 분석용인 경우 API 호출을 건너뜁니다
         if self._is_test_repo:
             logging.info(f"ℹ️ [TEST MODE] '{self.repo_path}'는 테스트용 저장소입니다. 실제 GitHub API 호출을 수행하지 않습니다.")
