@@ -200,13 +200,28 @@ class RepoAnalyzer:
 
                 # PR 처리 (병합된 PR만)
                 if 'pull_request' in item:
-                    merged_at = item.get('pull_request', {}).get('merged_at')
-                    if merged_at:
+                    # 이슈 객체에서 PR 번호 꺼내기
+                    pr_number = item.get('number')
+                    if pr_number is None:
+                        continue
+                    # /pulls/{번호} API 호출해서 실제 merged_at 확인
+                    pr_url = f"https://api.github.com/repos/{self.repo_path}/pulls/{pr_number}"
+                    try:
+                        pr_resp = retry_request(self.SESSION, pr_url)
+                    except Exception:
+                        # 네트워크 오류 등으로 PR 상세를 못 가져오면 점수 부여 건너뜀
+                        continue
+                    # API 오류(401,403,404,...) 처리
+                    if self._handle_api_error(pr_resp.status_code):
+                        continue
+                    pr_data = pr_resp.json()
+                    # 진짜 merged_at 값이 있는지 확인
+                    if pr_data.get('merged_at'):
                         # JS와 동일하게 첫 번째 라벨만 사용
-                        if label_names:  # 라벨이 존재하는 경우만
-                            first_label = label_names[0]  # 첫 번째 라벨만 선택
+                        if label_names:
+                            first_label = label_names[0]
                             if first_label in ['enhancement', 'bug']:
-                                self.participants[author]['p_enhancement'] += 1  # 기능/버그로 통합 카운트
+                                self.participants[author]['p_enhancement'] += 1
                             elif first_label == 'documentation':
                                 self.participants[author]['p_documentation'] += 1
                             elif first_label == 'typo':
