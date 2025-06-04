@@ -1,23 +1,18 @@
 #!/usr/bin/env python3
-import json
 import logging
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import pandas as pd
-from prettytable import PrettyTable
 import numpy as np
-from datetime import datetime, timezone, date
+from datetime import datetime, date
 from zoneinfo import ZoneInfo
 from prettytable import PrettyTable
 
 
-from .common_utils import log
 from .theme_manager import ThemeManager
 
-import sys
 import os
 
 class OutputHandler:
@@ -495,7 +490,6 @@ class OutputHandler:
         모든 저장소에 대한 단일 HTML 보고서 생성
         """
         import os
-        from datetime import datetime
 
         # 출력 디렉토리 생성
         os.makedirs(output_dir, exist_ok=True)

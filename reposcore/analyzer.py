@@ -1,41 +1,49 @@
 #!/usr/bin/env python3
 import json
-import requests
+from collections import defaultdict
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-from collections import defaultdict
-import os
 
-from .common_utils import log, is_verbose
 from .github_utils import *
-from .theme_manager import ThemeManager 
-
-import logging
-import sys
+from .theme_manager import ThemeManager
 
 ERROR_MESSAGES = {
     401: "❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요.",
     403: ("⚠️ 요청 실패 (403): GitHub API rate limit에 도달했습니다.\n"
-            "🔑 토큰 없이 실행하면 1시간에 최대 60회 요청만 허용됩니다.\n"
-            "💡 해결법: --token 옵션으로 GitHub 개인 액세스 토큰을 입력해 주세요."),
+          "🔑 토큰 없이 실행하면 1시간에 최대 60회 요청만 허용됩니다.\n"
+          "💡 해결법: --token 옵션으로 GitHub 개인 액세스 토큰을 입력해 주세요."),
     404: "⚠️ 요청 실패 (404): 리포지토리가 존재하지 않습니다.",
     500: "⚠️ 요청 실패 (500): GitHub 내부 서버 오류 발생!",
     503: "⚠️ 요청 실패 (503): 서비스 불가",
     422: ("⚠️ 요청 실패 (422): 처리할 수 없는 컨텐츠\n"
-            "⚠️ 유효성 검사에 실패 했거나, 엔드 포인트가 스팸 처리되었습니다.")
+          "⚠️ 유효성 검사에 실패 했거나, 엔드 포인트가 스팸 처리되었습니다.")
 }
 
+logger = logging.getLogger(__name__)
+
+
 def get_emoji(score):
-    if score >= 90: return "🌟"     # 최상위 성과
-    elif score >= 80: return "⭐"    # 탁월한 성과
-    elif score >= 70: return "🎯"    # 목표 달성
-    elif score >= 60: return "🎨"    # 양호한 성과
-    elif score >= 50: return "🌱"    # 성장 중
-    elif score >= 40: return "🍀"    # 발전 가능성
-    elif score >= 30: return "🌿"    # 초기 단계
-    elif score >= 20: return "🍂"    # 개선 필요
-    elif score >= 10: return "🍁"    # 참여 시작
-    else: return "🌑"                # 최소 참여
+    if score >= 90:
+        return "🌟"  # 최상위 성과
+    elif score >= 80:
+        return "⭐"  # 탁월한 성과
+    elif score >= 70:
+        return "🎯"  # 목표 달성
+    elif score >= 60:
+        return "🎨"  # 양호한 성과
+    elif score >= 50:
+        return "🌱"  # 성장 중
+    elif score >= 40:
+        return "🍀"  # 발전 가능성
+    elif score >= 30:
+        return "🌿"  # 초기 단계
+    elif score >= 20:
+        return "🍂"  # 개선 필요
+    elif score >= 10:
+        return "🍁"  # 참여 시작
+    else:
+        return "🌑"  # 최소 참여
+
 
 class RepoAnalyzer:
     """Class to analyze repository participation for scoring"""
@@ -47,7 +55,7 @@ class RepoAnalyzer:
         'feat_bug_is': 2,
         'doc_is': 1
     }
-    
+
     # 사용자 제외 목록
     EXCLUDED_USERS = {"kyahnu", "kyagrd"}
 
@@ -56,16 +64,16 @@ class RepoAnalyzer:
         self._is_test_repo = repo_path == "dummy/repo"
         self._is_multiple_repos = repo_path == "multiple_repos"
         self.dry_run = dry_run
-        
+
         # 테스트용이나 통합 분석용이 아닌 경우에만 실제 저장소 존재 여부 확인
         if not self._is_test_repo and not self._is_multiple_repos:
             if not check_github_repo_exists(repo_path):  # 토큰 파라미터 제거
-                logging.error(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
+                logger.error(f"입력한 저장소 '{repo_path}'가 GitHub에 존재하지 않습니다.")
                 sys.exit(1)
         elif self._is_test_repo:
-            log(f"ℹ️ [TEST MODE] '{repo_path}'는 테스트용 저장소로 간주합니다.", force=True)
+            logger.debug(f"ℹ️ [TEST MODE] '{repo_path}'는 테스트용 저장소로 간주합니다.")
         elif self._is_multiple_repos:
-            log(f"ℹ️ [통합 분석] 여러 저장소의 통합 분석을 수행합니다.", force=True)
+            logger.debug(f"ℹ️ [통합 분석] 여러 저장소의 통합 분석을 수행합니다.")
 
         self.repo_path = repo_path
         self.participants: dict[str, dict[str, int]] = {}
@@ -75,7 +83,7 @@ class RepoAnalyzer:
         self.score = self.SCORE_WEIGHTS.copy()
 
         self.theme_manager = ThemeManager()  # 테마 매니저 초기화
-        self.set_theme(theme)                # 테마 설정
+        self.set_theme(theme)  # 테마 설정
 
         self._data_collected = True
         self.__previous_create_at = None
@@ -115,11 +123,11 @@ class RepoAnalyzer:
 
     def _handle_api_error(self, status_code: int) -> bool:
         if status_code in ERROR_MESSAGES:
-            logging.error(ERROR_MESSAGES[status_code])
+            logger.error(ERROR_MESSAGES[status_code])
             self._data_collected = False
             return True
         elif status_code != 200:
-            logging.warning(f"⚠️ GitHub API 요청 실패: {status_code}")
+            logger.warning(f"⚠️ GitHub API 요청 실패: {status_code}")
             self._data_collected = False
             return True
         return False
@@ -132,16 +140,16 @@ class RepoAnalyzer:
         이슈는 open / reopened / completed 상태만 점수에 반영합니다.
         """
         if self.dry_run:
-            log(f"[DRY-RUN] '{self.repo_path}'에 대해 PR/이슈 수집을 생략합니다.", force=True)
+            logger.debug(f"[DRY-RUN] '{self.repo_path}'에 대해 PR/이슈 수집을 생략합니다.")
             return
         # 테스트용 저장소나 통합 분석용인 경우 API 호출을 건너뜁니다
         if self._is_test_repo:
-            logging.info(f"ℹ️ [TEST MODE] '{self.repo_path}'는 테스트용 저장소입니다. 실제 GitHub API 호출을 수행하지 않습니다.")
+            logger.info(f"ℹ️ [TEST MODE] '{self.repo_path}'는 테스트용 저장소입니다. 실제 GitHub API 호출을 수행하지 않습니다.")
             return
         elif self._is_multiple_repos:
-            logging.info(f"ℹ️ [통합 분석] 통합 분석을 위한 저장소입니다. API 호출을 건너뜁니다.")
+            logger.info(f"ℹ️ [통합 분석] 통합 분석을 위한 저장소입니다. API 호출을 건너뜁니다.")
             return
-            
+
         page = 1
         per_page = 100
 
@@ -149,13 +157,13 @@ class RepoAnalyzer:
             url = f"https://api.github.com/repos/{self.repo_path}/issues"
 
             response = retry_request(self.SESSION,
-                                    url,
-                                    params={
-                                        'state': 'all',
-                                        'per_page': per_page,
-                                        'page': page
-                                    })
-        
+                                     url,
+                                     params={
+                                         'state': 'all',
+                                         'per_page': per_page,
+                                         'page': page
+                                     })
+
             # 🔽 에러 처리 부분 25줄 → 3줄로 리팩토링
             if self._handle_api_error(response.status_code):
                 return
@@ -166,7 +174,7 @@ class RepoAnalyzer:
 
             for item in items:
                 if 'created_at' not in item:
-                    logging.warning(f"⚠️ 요청 분석 실패")
+                    logger.warning(f"⚠️ 요청 분석 실패")
                     return
 
                 server_create_datetime = datetime.fromisoformat(item['created_at'])
@@ -187,7 +195,7 @@ class RepoAnalyzer:
                         'p_enhancement': 0,
                         'p_bug': 0,
                         'p_documentation': 0,
-                        'p_typo' : 0,
+                        'p_typo': 0,
                         'i_enhancement': 0,
                         'i_bug': 0,
                         'i_documentation': 0,
@@ -246,16 +254,16 @@ class RepoAnalyzer:
                 break
 
         if not self.participants:
-            logging.warning("⚠️ 수집된 데이터가 없습니다. (참여자 없음)")
-            logging.info("📄 참여자는 없지만, 결과 파일은 생성됩니다.")
+            logger.warning("⚠️ 수집된 데이터가 없습니다. (참여자 없음)")
+            logger.info("📄 참여자는 없지만, 결과 파일은 생성됩니다.")
         else:
             self.participants = {
                 user: info for user, info in self.participants.items()
                 if user not in self.EXCLUDED_USERS
             }
-            log("\n참여자별 활동 내역 (participants 딕셔너리):", force=is_verbose)
+            logger.debug("\n참여자별 활동 내역 (participants 딕셔너리):")
             for user, info in self.participants.items():
-                log(f"{user}: {info}", force=is_verbose)
+                logger.debug(f"{user}: {info}")
 
     def _extract_pr_counts(self, activities: dict) -> tuple[int, int, int, int, int]:
         """PR 관련 카운트 추출"""
@@ -292,11 +300,11 @@ class RepoAnalyzer:
     def _calculate_total_score(self, p_fb_at: int, p_d_at: int, p_t_at: int, i_fb_at: int, i_d_at: int) -> int:
         """총점 계산"""
         return (
-            self.score['feat_bug_pr'] * p_fb_at +
-            self.score['doc_pr'] * p_d_at +
-            self.score['typo_pr'] * p_t_at +
-            self.score['feat_bug_is'] * i_fb_at +
-            self.score['doc_is'] * i_d_at
+                self.score['feat_bug_pr'] * p_fb_at +
+                self.score['doc_pr'] * p_d_at +
+                self.score['typo_pr'] * p_t_at +
+                self.score['feat_bug_is'] * i_fb_at +
+                self.score['doc_is'] * i_d_at
         )
 
     def _create_score_dict(self, p_fb_at: int, p_d_at: int, p_t_at: int, i_fb_at: int, i_d_at: int, total: int) -> dict[str, float]:
@@ -321,15 +329,14 @@ class RepoAnalyzer:
         # 사용자 정보 매핑 (제공된 경우)
         if user_info:
             scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
-        
+
         sorted_items = sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True)
 
-        #공동 등수 처리
+        # 공동 등수 처리
         ranked_scores = {}
         last_score = None
         current_rank = 0
         rank_counter = 0
-
 
         for user, data in sorted_items:
             rank_counter += 1
@@ -349,10 +356,10 @@ class RepoAnalyzer:
         for participant, activities in self.participants.items():
             # PR 카운트 추출
             p_f, p_b, p_d, p_t, p_fb = self._extract_pr_counts(activities)
-            
+
             # 이슈 카운트 추출
             i_f, i_b, i_d, i_fb = self._extract_issue_counts(activities)
-            
+
             # 유효 카운트 계산
             p_valid, i_valid = self._calculate_valid_counts(p_fb, p_d, p_t, i_fb, i_d)
 
@@ -370,9 +377,9 @@ class RepoAnalyzer:
                 i_d_at = i_valid - i_fb_at
 
                 total = (
-                    self.score['feat_bug_is'] * i_fb_at +
-                    self.score['doc_is'] * i_d_at +
-                    self.score['typo_pr'] * p_t_at
+                        self.score['feat_bug_is'] * i_fb_at +
+                        self.score['doc_is'] * i_d_at +
+                        self.score['typo_pr'] * p_t_at
                 )
 
                 scores[participant] = {
@@ -386,15 +393,15 @@ class RepoAnalyzer:
 
                 total_score_sum += total
                 continue
-            
+
             # 조정된 카운트 계산
             p_fb_at, p_d_at, p_t_at, i_fb_at, i_d_at = self._calculate_adjusted_counts(
                 p_fb, p_d, p_valid, i_fb, i_valid
             )
-            
+
             # 총점 계산
             total = self._calculate_total_score(p_fb_at, p_d_at, p_t_at, i_fb_at, i_d_at)
-            
+
             scores[participant] = self._create_score_dict(p_fb_at, p_d_at, p_t_at, i_fb_at, i_d_at, total)
             total_score_sum += total
 
@@ -406,7 +413,7 @@ class RepoAnalyzer:
             scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
 
         return self._finalize_scores(scores, total_score_sum, user_info)
-    
+
     def set_semester_start_date(self, date: datetime.date) -> None:
         """--semester-start 옵션에서 받은 학기 시작일 저장"""
         self.semester_start_date = date
