@@ -193,10 +193,16 @@ def merge_participants(
                 overall[user][key] = overall[user].get(key, 0) + value
     return overall
 
+def save_cli_args(args, output_dir="results"):
+    os.makedirs(output_dir, exist_ok=True)
+    path = os.path.join(output_dir, "settings.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(vars(args), f, indent=2, ensure_ascii=False)
 
 def main() -> None:
     """Main execution function"""
     args = parse_arguments()
+    save_cli_args(args, args.output)
 
     # repository가 없으면 에러
     if not args.repository:
