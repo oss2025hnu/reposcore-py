@@ -190,6 +190,15 @@ class OutputHandler:
 
     def generate_chart(self, scores: dict[str, dict[str, float]], save_path: str, show_grade: bool = False) -> None:
         """결과를 차트로 출력: PR과 이슈를 단일 스택형 막대 그래프로 통합"""
+
+        theme_colors = self.theme_manager.themes[self.theme_manager.current_theme]
+        chart_style = theme_colors.get("chart", {}).get("style", {})
+        pr_color = chart_style.get("primary", "#4e79a7")
+        issue_color = chart_style.get("secondary", "#f28e2c")
+        text_color = chart_style.get("text", "#212529")
+        bg_color = chart_style.get("background", "#ffffff")
+        grid_color = chart_style.get("grid", "#e9ecef")
+
         # Linux 환경에서 CJK 폰트 수동 설정
         # OSS 한글 폰트인 본고딕, 나눔고딕, 백묵 중 순서대로 하나를 선택
         font_paths = [
@@ -201,24 +210,6 @@ class OutputHandler:
         sorted_items = sorted(scores.items(), key=lambda x: x[1].get("rank", 0))
         sorted_scores = dict(sorted_items)
 
-        participants = list(sorted_scores.keys())
-        pr_scores = [sorted_scores[p]['feat/bug PR'] + sorted_scores[p]['document PR'] + sorted_scores[p]['typo PR'] for p in participants]
-        issue_scores = [sorted_scores[p]['feat/bug issue'] + sorted_scores[p]['document issue'] for p in participants]
-        total_scores = [sorted_scores[p]['total'] for p in participants]
-        def get_ordinal_suffix(rank: int) -> str:
-            if rank == 1:
-                return "1st"
-            elif rank == 2:
-                return "2nd"
-            elif rank == 3:
-                return "3rd"
-            else:
-                return f"{rank}th"
-
-        ranked_participants = [f"{user} ({get_ordinal_suffix(int(sorted_scores[user].get("rank", 0)))})" for user in participants]
-
-        timestamp = self.get_kst_timestamp()
-
         # 등수를 영어 서수로 변환하는 함수
         def get_ordinal_suffix(rank: int) -> str:
             if rank == 1:
@@ -229,6 +220,15 @@ class OutputHandler:
                 return "3rd"
             else:
                 return f"{rank}th"
+
+        participants = list(sorted_scores.keys())
+        pr_scores = [sorted_scores[p]['feat/bug PR'] + sorted_scores[p]['document PR'] + sorted_scores[p]['typo PR'] for p in participants]
+        issue_scores = [sorted_scores[p]['feat/bug issue'] + sorted_scores[p]['document issue'] for p in participants]
+        total_scores = [sorted_scores[p]['total'] for p in participants]
+        
+        ranked_participants = [f"{user} ({get_ordinal_suffix(int(sorted_scores[user].get("rank", 0)))})" for user in participants]
+
+        timestamp = self.get_kst_timestamp()
 
         # 정렬된 참여자 리스트 만들기
         sorted_scores = sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True)
@@ -254,6 +254,17 @@ class OutputHandler:
 
         # 차트 생성
         fig, ax = plt.subplots(figsize=(self.CHART_CONFIG['figure_width'], chart_height))
+
+        fig.patch.set_facecolor(bg_color)        
+        ax.set_facecolor(bg_color)               
+        ax.tick_params(colors=text_color)        
+        ax.xaxis.label.set_color(text_color)    
+        ax.yaxis.label.set_color(text_color)    
+        ax.title.set_color(text_color)           
+        ax.spines['bottom'].set_color(grid_color)
+        ax.spines['top'].set_color(grid_color)
+        ax.spines['left'].set_color(grid_color)
+        ax.spines['right'].set_color(grid_color)
         
         # 데이터 준비
         participants = list(scores.keys())
@@ -297,7 +308,7 @@ class OutputHandler:
             text_x = total + x_offset if total > 3 else total + 2.0
 
             # 폰트 크기 조절
-            ax.text(text_x, i, label, va='center', fontsize=8) 
+            ax.text(text_x, i, label, va='center', fontsize=8, color=text_color)
 
         # 평균, 최고점, 최저점
         avg_score, max_score, min_score = self._summarize_scores(scores)
@@ -335,7 +346,7 @@ class OutputHandler:
         plt.tight_layout()
 
         # 저장
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor())
         plt.close() 
 
     def generate_repository_stacked_chart(self, scores: dict, save_path: str):
