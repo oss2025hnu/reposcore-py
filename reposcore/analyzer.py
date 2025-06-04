@@ -401,10 +401,6 @@ class RepoAnalyzer:
         if min_contributions > 0:
             scores = {user: s for user, s in scores.items() if s["total"] >= min_contributions}
 
-        # 사용자 정보 매핑 (제공된 경우)
-        if user_info:
-            scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
-
         return self._finalize_scores(scores, total_score_sum, user_info)
     
     def set_semester_start_date(self, date: datetime.date) -> None:
