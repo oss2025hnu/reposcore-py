@@ -5,7 +5,7 @@ import sys
 
 import requests
 
-from .retry_decorator import retry
+from .retry_decorator import retry, retry_request  # retry_request import
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,13 @@ def validate_token() -> None:
     }
     if token:
         headers["Authorization"] = f"token {token}"
-    
-    response = requests.get("https://api.github.com/user", headers=headers)
+
+    session = requests.Session()
+    try:
+        response = retry_request(session, "https://api.github.com/user", headers=headers)
+    except Exception as e:
+        logger.error(f"❌ 인증 API 요청 자체가 실패했습니다: {e}")
+        sys.exit(1)
     if response.status_code != 200:
         logger.error('❌ 인증 실패: 잘못된 GitHub 토큰입니다. 토큰 값을 확인해 주세요.')
         sys.exit(1)
@@ -43,7 +48,12 @@ def check_github_repo_exists(repo: str) -> bool:
     if token:
         headers["Authorization"] = f"token {token}"
 
-    response = requests.get(url, headers=headers)
+    session = requests.Session()
+    try:
+        response = retry_request(session, url, headers=headers)
+    except Exception as e:
+        logger.warning(f"⚠️ 저장소 존재 확인 API 요청 자체가 실패했습니다: {e}")
+        return False
 
     if response.status_code == 200:
         return True
@@ -66,8 +76,13 @@ def check_rate_limit() -> None:
     }
     if token:
         headers["Authorization"] = f"token {token}"
-    
-    response = requests.get("https://api.github.com/rate_limit", headers=headers)
+
+    session = requests.Session()
+    try:
+        response = retry_request(session, "https://api.github.com/rate_limit", headers=headers)
+    except Exception as e:
+        logger.error(f"API 요청 제한 정보를 가져오는데 실패했습니다: {e}")
+        return
     if response.status_code == 200:
         data = response.json()
         core = data.get("resources", {}).get("core", {})
