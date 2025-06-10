@@ -148,6 +148,14 @@ def parse_arguments() -> argparse.Namespace:
     action="store_true",
     help="실제 작업 없이 시뮬레이션 정보만 출력합니다."
     )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=3,
+        metavar="N",
+        help="GitHub API 요청 실패 시 최대 재시도 횟수 (기본값: 3)"
+    )
+
     return parser.parse_args()
 
 args = parse_arguments()
@@ -333,13 +341,18 @@ def main() -> None:
             else:
                 if args.verbose:
                     logger.info(f"�� 캐시를 사용하지 않거나 캐시 파일({cache_file_name})이 없습니다. GitHub API로 데이터를 수집합니다.")
-            analyzer.collect_PRs_and_issues()
-            if not getattr(analyzer, "_data_collected", True):
-                logger.error("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 종료합니다.")
-                logger.error("ℹ️ 인증 없이 실행한 경우 요청 횟수 제한(403)일 수 있습니다. --token 옵션을 사용해보세요.")
-                sys.exit(1)
-            with open(cache_path, "w", encoding="utf-8") as f:
-                json.dump({'update_time':analyzer.previous_create_at, 'participants': analyzer.participants, 'weekly_activity': dict(analyzer.weekly_activity)}, f, indent=2, ensure_ascii=False)
+            try:
+                analyzer.collect_PRs_and_issues()
+                if not getattr(analyzer, "_data_collected", True):
+                    logger.error("❌ GitHub API 요청에 실패했습니다. 결과 파일을 생성하지 않고 건너뜁니다.")
+                    logger.error("ℹ️ 인증 없이 실행한 경우 요청 횟수 제한(403)일 수 있습니다. --token 옵션을 사용해보세요.")
+                    continue  # <<<< 다음 저장소로 진행
+                with open(cache_path, "w", encoding="utf-8") as f:
+                    json.dump({'update_time':analyzer.previous_create_at, 'participants': analyzer.participants, 'weekly_activity': dict(analyzer.weekly_activity)}, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                logger.error(f"❌ {repo} 저장소 분석 중 예외 발생: {e}")
+                logger.error("해당 저장소를 건너뜁니다.")
+                continue
 
         try:
             # 1) 사용자 정보 로드 (없으면 None)
