@@ -212,19 +212,30 @@ class RepoAnalyzer:
                     pr_number = item.get('number')
                     if pr_number is None:
                         continue
-                    # /pulls/{번호} API 호출해서 실제 merged_at 확인
-                    pr_url = f"https://api.github.com/repos/{self.repo_path}/pulls/{pr_number}"
-                    try:
-                        pr_resp = retry_request(self.SESSION, pr_url)
-                    except Exception:
-                        # 네트워크 오류 등으로 PR 상세를 못 가져오면 점수 부여 건너뜀
-                        continue
-                    # API 오류(401,403,404,...) 처리
-                    if self._handle_api_error(pr_resp.status_code):
-                        continue
-                    pr_data = pr_resp.json()
-                    # 진짜 merged_at 값이 있는지 확인
-                    if pr_data.get('merged_at'):
+                    
+                    if 'pull_request' in item:
+                        pr_number = item.get('number')
+                        if pr_number is None:
+                            continue
+
+                        merged = False
+
+                        merged_at_inline = item.get('pull_request', {}).get('merged_at')
+                        if merged_at_inline:
+                            merged = True
+
+                    elif item.get('state') == 'closed':
+                        pr_url = f"https://api.github.com/repos/{self.repo_path}/pulls/{pr_number}"
+                        try:
+                            pr_resp = retry_request(self.SESSION, pr_url)
+                        except Exception:
+                            continue
+                        if self._handle_api_error(pr_resp.status_code):
+                            continue
+                        pr_data = pr_resp.json()
+                        merged = bool(pr_data.get('merged_at'))
+                        
+                    if merged:
                         # JS와 동일하게 첫 번째 라벨만 사용
                         if label_names:
                             first_label = label_names[0]
