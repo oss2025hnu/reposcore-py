@@ -328,7 +328,12 @@ class RepoAnalyzer:
 
         # 사용자 정보 매핑 (제공된 경우)
         if user_info:
-            scores = {user_info[k]: scores.pop(k) for k in list(scores.keys()) if user_info.get(k) and scores.get(k)}
+            new_scores = {}
+            for k in list(scores.keys()):
+                display_name = user_info.get(k, k)
+                new_scores[display_name] = scores[k]
+            scores = new_scores
+
 
         sorted_items = sorted(scores.items(), key=lambda x: x[1]["total"], reverse=True)
 
