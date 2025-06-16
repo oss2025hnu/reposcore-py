@@ -155,6 +155,11 @@ def parse_arguments() -> argparse.Namespace:
         metavar="N",
         help="GitHub API 요청 실패 시 최대 재시도 횟수 (기본값: 3)"
     )
+    parser.add_argument(
+        "--prefix",
+        type=str,
+        help="결과 디랙토리의 이름에 접두어를 설정합니다."
+    )
 
     return parser.parse_args()
 
@@ -389,6 +394,7 @@ def main() -> None:
                 continue
 
             # 저장소별 폴더 생성 (owner/repo -> owner_repo)
+            repo = f"{args.prefix}_{repo}" if args.prefix else repo
             repo_safe_name = repo.replace('/', '_')
             repo_output_dir = os.path.join(args.output, repo_safe_name)
             os.makedirs(repo_output_dir, exist_ok=True)
