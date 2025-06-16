@@ -1,0 +1,8 @@
+CLI 옵션 중 `--theme` 사용 예시가 현재 `dark`만 보여지고 있어서,  
+기본값인 `default`도 함께 예시로 보여주면 사용자 입장에서 이해하기 더 쉬울 것 같습니다.
+
+예를 들어 다음과 같이 함께 표기하면 좋을 것 같습니다.
+
+```bash
+python -m reposcore <repo> --format chart --theme dark
+python -m reposcore <repo> --format chart --theme default
