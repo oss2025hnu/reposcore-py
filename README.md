@@ -54,6 +54,7 @@ options:
                         최소 기여 점수가 지정 값 이상인 사용자만 결과에 포함합니다.(기본값 : 1)
   --dry-run             실제 작업 없이 시뮬레이션 정보만 출력합니다.
   --max-retries N       GitHub API 요청 실패 시 최대 재시도 횟수 (기본값: 3)
+  --prefix PREFIX       결과 디랙토리의 이름에 접두어를 설정합니다.
 ```
 ## Clean results directory
 
