@@ -14,6 +14,11 @@ A CLI for scoring student participation in an open-source class repo, implemente
 make venv
 make requirements
 ```
+예시:
+
+```bash
+python -m reposcore <repo> --format chart --theme dark
+python -m reposcore <repo> --format chart --theme default
 
 ## Usage
 아래는 `python -m reposcore -h` 또는 `python -m reposcore --help` 실행 결과를 붙여넣은 것이므로

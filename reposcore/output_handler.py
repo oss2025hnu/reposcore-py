@@ -312,6 +312,14 @@ class OutputHandler:
         ax.set_yticks(range(len(ranked_participants)))
         ax.set_yticklabels(ranked_participants)
         ax.set_xlabel('Score')
+    if self.theme == "dark":
+        ax.tick_params(colors='white')
+        for label in ax.get_xticklabels() + ax.get_yticklabels():
+            label.set_color('white')
+        title_color = 'white'
+    else:
+        title_color = 'title_color'
+
         ax.set_title(
             f'Repository Contribution Scores\n(Generated at {timestamp})',
             fontsize=14,
