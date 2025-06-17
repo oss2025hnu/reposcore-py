@@ -131,7 +131,6 @@ def test_generate_table_creates_file():
             "feat/bug issue": 6,
             "document issue": 3,
             "total": 25,
-            "grade": "A"
         },
         "bob": {
             "feat/bug PR": 9,
@@ -140,7 +139,6 @@ def test_generate_table_creates_file():
             "feat/bug issue": 6,
             "document issue": 3,
             "total": 24,
-            "grade": "A"
         }
     }
 
@@ -160,7 +158,6 @@ def test_generate_count_csv_creates_file():
             "feat/bug issue": 6,
             "document issue": 3,
             "total": 25,
-            "grade": "A"
         },
         "bob": {
             "feat/bug PR": 9,
@@ -169,7 +166,6 @@ def test_generate_count_csv_creates_file():
             "feat/bug issue": 6,
             "document issue": 3,
             "total": 24,
-            "grade": "A"
         }
     }
 
@@ -196,7 +192,6 @@ def test_generate_chart_creates_file():
             "feat/bug issue": 6,
             "document issue": 3,
             "total": 24,
-            "grade": "A"
         },
         "bob": {
             "feat/bug PR": 9,
@@ -205,7 +200,6 @@ def test_generate_chart_creates_file():
             "feat/bug issue": 6,
             "document issue": 3,
             "total": 24,
-            "grade": "A"
         }
     }
 

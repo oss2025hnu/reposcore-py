@@ -91,11 +91,6 @@ def parse_arguments() -> argparse.Namespace:
         help =  f"결과 출력 형식 선택 (복수 선택 가능, 예: --format {FORMAT_TABLE} {FORMAT_CHART}) (기본값:'{FORMAT_ALL}')"
     )
     parser.add_argument(
-        "--grade",
-        action="store_true",
-        help="차트에 등급 표시"
-    )
-    parser.add_argument(
         "--use-cache",
         action="store_true",
         help="participants 데이터를 캐시에서 불러올지 여부 (기본: API를 통해 새로 수집)"
@@ -415,9 +410,9 @@ def main() -> None:
 
             # 3) 차트 이미지 저장
             if FORMAT_CHART in formats or FORMAT_HTML in formats:
-                chart_filename = "chart_grade.png" if args.grade else "chart.png"
+                chart_filename = "chart.png"
                 chart_path = os.path.join(repo_output_dir, chart_filename)
-                output_handler.generate_chart(repo_scores, save_path=chart_path, show_grade=args.grade)
+                output_handler.generate_chart(repo_scores, save_path=chart_path)
                 if args.verbose:
                     logger.info(f"차트 이미지 저장 완료: {chart_path}")
                 results_saved.append("Chart")
@@ -425,7 +420,7 @@ def main() -> None:
             # HTML 보고서 생성을 위한 데이터 준비 (나중에 통합 HTML 생성을 위해)
             if FORMAT_HTML in formats:
                 # 차트 이미지 경로 준비
-                chart_filename = "chart_grade.png" if args.grade else "chart.png"
+                chart_filename = "chart.png"
                 chart_path = os.path.join(repo_output_dir, chart_filename)
                 
                 # 주간 차트 경로 준비
@@ -552,9 +547,9 @@ def main() -> None:
 
         # 차트 이미지 저장
         if FORMAT_CHART in formats or FORMAT_HTML in formats:
-            chart_filename = "chart_grade.png" if args.grade else "ratio_chart.png"
+            chart_filename = "ratio_chart.png"
             chart_path = os.path.join(overall_output_dir, chart_filename)
-            output_handler.generate_chart(overall_scores, save_path=chart_path, show_grade=args.grade)
+            output_handler.generate_chart(overall_scores, save_path=chart_path)
             if args.verbose:
                 logger.info(f"[통합 저장소] 차트 이미지 저장 완료: {chart_path}")
             results_saved.append("Chart")

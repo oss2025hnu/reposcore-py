@@ -10,15 +10,7 @@ class ThemeManager:
                 'primary': '#007bff',
                 'secondary': '#6c757d',
                 'background': '#ffffff',
-                'text': '#212529',
-                'grade_colors': {
-                    'A': '#28a745',
-                    'B': '#17a2b8',
-                    'C': '#ffc107',
-                    'D': '#fd7e14',
-                    'E': '#dc3545',
-                    'F': '#6c757d'
-                }
+                'text': '#212529'
             },
             'table': {
                 'style': {
@@ -41,15 +33,7 @@ class ThemeManager:
                 'primary': '#0d6efd',
                 'secondary': '#6c757d',
                 'background': '#212529',
-                'text': '#f8f9fa',
-                'grade_colors': {
-                    'A': '#2dce89',
-                    'B': '#11cdef',
-                    'C': '#fb6340',
-                    'D': '#f5365c',
-                    'E': '#8965e0',
-                    'F': '#adb5bd'
-                }
+                'text': '#f8f9fa'
             },
             'table': {
                 'style': {

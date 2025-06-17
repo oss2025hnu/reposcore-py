@@ -28,18 +28,6 @@ class OutputHandler:
         'text_padding': 0.1            # 텍스트 배경 상자 패딩
     }
 
-    
-    
-    # 등급 기준
-    GRADE_THRESHOLDS = {
-        90: 'A',
-        80: 'B',
-        70: 'C',
-        60: 'D',
-        50: 'E',
-        0: 'F'
-    }
-
     def __init__(self, theme: str = 'default', dry_run: bool = False):
         self.theme_manager = ThemeManager()  # 테마 매니저 초기화
         self.set_theme(theme)                # 테마 설정
@@ -51,15 +39,6 @@ class OutputHandler:
         else:
             raise ValueError(f"지원하지 않는 테마입니다: {theme_name}")
             
-
-    def _calculate_grade(self, total_score: float) -> str:
-        """점수에 따른 등급 계산"""
-        for threshold, grade in self.GRADE_THRESHOLDS.items():
-            if total_score >= threshold:
-                return grade
-        return 'F'
-    
-
     def _summarize_scores(self, scores: dict[str, dict[str, float]]) -> tuple[float, float, float]:
         """점수 딕셔너리에서 평균, 최고점, 최저점을 계산해서 반환"""
         total_scores = [score["total"] for score in scores.values()]
@@ -87,15 +66,12 @@ class OutputHandler:
             return
         timestamp = self.get_kst_timestamp()
         table = PrettyTable()
-        table.field_names = ["참여자", "총점", "등급", "PR(기능/버그)", "PR(문서)", "PR(오타)", "이슈(기능/버그)", "이슈(문서)"]
+        table.field_names = ["참여자", "총점", "PR(기능/버그)", "PR(문서)", "PR(오타)", "이슈(기능/버그)", "이슈(문서)"]
         
         for name, score in scores.items():
-            # 등급 계산
-            grade = self._calculate_grade(score['total'])
             row = [
                 name,
                 f"{score['total']:.1f}",
-                grade,
                 f"{score['feat/bug PR']:.1f}",
                 f"{score['document PR']:.1f}",
                 f"{score['typo PR']:.1f}",
@@ -122,7 +98,6 @@ class OutputHandler:
         if 'rank' in df.columns:
             df.insert(0, 'rank', df.pop('rank'))
             df = df.sort_values('rank')
-        df = df.drop('grade', axis=1, errors='ignore')
         df = df.round(1)
         df.index.name = 'name'  # 인덱스 이름을 'name'으로 설정
         df.to_csv(save_path, encoding='utf-8')
@@ -136,18 +111,16 @@ class OutputHandler:
 
         table = PrettyTable()
         table.field_names = [
-            "Rank","Name", "Total Score", "Grade",
+            "Rank","Name", "Total Score",
             "PR (Feature/Bug)", "PR (Docs)", "PR (Typos)",
             "Issue (Feature/Bug)", "Issue (Docs)"
         ]
 
         for rank, (name, score) in enumerate(scores.items(), start=1):
-            grade = self._calculate_grade(score["total"])
             table.add_row([
                 int(score['rank']),
                 name,
                 int(score['total']),
-                grade,
                 int(score['feat/bug PR']),
                 int(score['document PR']),
                 int(score['typo PR']),
@@ -183,7 +156,7 @@ class OutputHandler:
 
         return pr_ratio, issue_ratio, code_ratio
 
-    def generate_chart(self, scores: dict[str, dict[str, float]], save_path: str, show_grade: bool = False) -> None:
+    def generate_chart(self, scores: dict[str, dict[str, float]], save_path: str) -> None:
         """결과를 차트로 출력: PR과 이슈를 단일 스택형 막대 그래프로 통합"""
 
         theme_colors = self.theme_manager.themes[self.theme_manager.current_theme]
@@ -287,7 +260,6 @@ class OutputHandler:
         # 점수 및 PR/Issue 비율 표시
         for i, user in enumerate(participants):
             total = total_scores[i]
-            grade = self._calculate_grade(total)
 
             pr_score = pr_scores[i]
             issue_score = issue_scores[i]
@@ -296,7 +268,7 @@ class OutputHandler:
             issue_ratio = issue_score / total_contrib if total_contrib else 0
 
             # 두 줄로 출력 (줄바꿈)
-            label = f'{total:.1f} ({grade})\nP:{int(pr_ratio*100)}% I:{int(issue_ratio*100)}%'
+            label = f'{total:.1f} \nP:{int(pr_ratio*100)}% I:{int(issue_ratio*100)}%'
 
             # 위치 조정 (짧은 막대 보호)
             x_offset = max(total_scores) * 0.02
@@ -351,7 +323,7 @@ class OutputHandler:
         # ✅ 모든 사용자 기준으로 저장소 키 수집
         repo_keys = set()
         for user_data in scores.values():
-            repo_keys.update([k for k in user_data.keys() if k not in ["total", "grade", "rank"]])
+            repo_keys.update([k for k in user_data.keys() if k not in ["total", "rank"]])
         repo_keys = sorted(repo_keys)  # 보기 좋게 정렬해도 OK
 
         # 총점 기준 내림차순 정렬
@@ -459,7 +431,6 @@ class OutputHandler:
                         <th>순위</th>
                         <th>이름</th>
                         <th>총점</th>
-                        <th>등급</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -468,13 +439,11 @@ class OutputHandler:
         sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1].get('rank', 0)))
         for user, score_data in sorted_scores.items():
             total_score = score_data.get('total', 0)
-            grade = self._calculate_grade(total_score)
             html += f"""
                     <tr>
                         <td>{score_data.get('rank', '-')}</td>
                         <td>{user}</td>
                         <td>{total_score:.1f}</td>
-                        <td>{grade}</td>
                     </tr>        
             """
 
